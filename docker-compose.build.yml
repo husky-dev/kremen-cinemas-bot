@@ -4,10 +4,8 @@ services:
 
   entry-point:
     image: registry.smartapp.com.ua/pet/cinema/entry-point:latest
-    restart: always
-    ports:
-      - 80:8080
+    build: ./services/entry-point
 
   galaktika:
     image: registry.smartapp.com.ua/pet/cinema/galaktika:latest
-    restart: always
+    build: ./services/galaktika
