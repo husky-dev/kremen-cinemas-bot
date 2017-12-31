@@ -106,6 +106,12 @@ const parseMovieTitle = (title = '') => {
   if(usualMatch){
     return {title: usualMatch[1], format: usualMatch[2]}
   }
+  // Without starting
+  const withoutStartReg = /([\s\S]+?)"\s+([\d]D)/g;
+  const withoutStartMatch = withoutStartReg.exec(title);
+  if(withoutStartMatch){
+    return {title: withoutStartMatch[1], format: withoutStartMatch[2]}
+  }
   // Without format
   const withoutFormatReg = /"([\s\S]+?)"/g;
   const withoutFormatMatch = withoutFormatReg.exec(title);

@@ -1,13 +1,17 @@
 // Require
 const request = require('request');
 const { errors } = require('./consts');
+const log = require('./log').withModule('app');
 
 // Express
 
 const asyncWrap = fn => (req, res, next) => {
 	Promise
 	  .resolve(fn(req, res, next))
-	  .catch((err) => res.err(err));
+	  .catch((err) => {
+      log.err(err);
+      return res.err(err);
+    });
 };
 
 // Request

@@ -10,7 +10,7 @@ const _ = require('lodash');
 const moment = require('moment');
 const TelegramBot = require('node-telegram-bot-api');
 const {galaktika} = require('./common/services');
-const log = require('./common/log.js').withModule('index');
+const log = require('./common/log.js').withModule('app');
 // Bot
 const token = process.env.TELEGRAM_TOKEN;
 if(!token){
