@@ -56,7 +56,7 @@ const parseHallTable = ($, table) => {
 const parseHallInfo = ($, table) => {
   let data = {name: null, places: null};
   // Name
-  data.name = $('tr:first-child td:first-child strong', table).text() || null;
+  data.name = $('tr:first-child td:first-child strong', table).text().trim() || null;
   // Places
   const tdHtml = $('tr:first-child td:first-child', table).html();
   const placesReg = /имеет (\d+)/g;

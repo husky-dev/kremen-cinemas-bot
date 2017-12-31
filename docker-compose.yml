@@ -2,11 +2,13 @@ version: '2'
 
 services:
 
-  entry-point:
-    image: registry.smartapp.com.ua/pet/cinema/entry-point:latest
+  telegram-bot:
+    image: registry.smartapp.com.ua/pet/cinema/telegram-bot:latest
     restart: always
-    ports:
-      - 80:8080
+    environment:
+      - TELEGRAM_TOKEN
+    depends_on:
+      - galaktika
 
   galaktika:
     image: registry.smartapp.com.ua/pet/cinema/galaktika:latest

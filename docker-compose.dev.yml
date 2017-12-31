@@ -10,3 +10,12 @@ services:
     ports:
       - 7080:8080
     command: yarn start
+
+  telegram-bot:
+    image: node:alpine
+    working_dir: /usr/src/app
+    environment:
+      - TELEGRAM_TOKEN=536233288:AAEWievJGXdnU18SVeehwZs9S35iRqRyOic
+    volumes:
+      - ./services/telegram-bot:/usr/src/app
+    command: yarn start
