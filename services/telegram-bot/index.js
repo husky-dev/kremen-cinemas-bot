@@ -39,7 +39,7 @@ const commandsText = `
 const helpMsg = `
 Я вмію виконувати наступні команди:
 ${commandsText}
-Котатки:
+Контакти:
 https://fb.me/snipter
 `;
 const startMsg = `
