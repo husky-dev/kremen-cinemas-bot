@@ -9,7 +9,11 @@ services:
       - TELEGRAM_TOKEN
     depends_on:
       - galaktika
+      - redis
 
   galaktika:
     image: registry.smartapp.com.ua/pet/cinema/galaktika:latest
     restart: always
+
+  redis:
+    image: redis:alpine

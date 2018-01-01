@@ -19,3 +19,7 @@ services:
     volumes:
       - ./services/telegram-bot:/usr/src/app
     command: yarn start
+  
+  redis:
+    image: redis:alpine
+  

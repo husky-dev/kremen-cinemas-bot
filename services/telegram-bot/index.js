@@ -10,7 +10,11 @@ const _ = require('lodash');
 const moment = require('moment');
 const TelegramBot = require('node-telegram-bot-api');
 const {galaktika} = require('./common/services');
+const cache = require('./lib/cache');
+
+// Log
 const log = require('./common/log.js').withModule('app');
+
 // Bot
 const token = process.env.TELEGRAM_TOKEN;
 if(!token){
@@ -19,10 +23,14 @@ if(!token){
 }
 log.info('bot started');
 const bot = new TelegramBot(token, {polling: true});
+
 // Consts
 const REPLY_WAIT_TIMEOUT = 1000;
+const SCHEDULE_CACHE_KEY = 'cache:schedule';
+const SCHEDULE_CACHE_EXP = 60 * 60;
 const RN = '\r\n';
 const DRN = `${RN}${RN}`;
+
 // Templates
 const commandsText = `
 /schedule - розклад сеансів
@@ -31,6 +39,8 @@ const commandsText = `
 const helpMsg = `
 Я вмію виконувати наступні команди:
 ${commandsText}
+Котатки:
+https://fb.me/snipter
 `;
 const startMsg = `
 Привіт! Я вмію збирати інформацію про сеанси фільмів в Кременчуці і відправляти їх тобі в зручному форматі. Я можу виконувати наступні команди:
@@ -74,33 +84,56 @@ bot.on('message', (msg) => {
   if(modText === '/start'){
     bot.sendMessage(chatId, startMsg);
   }else if(modText === '/help'){
-    bot.sendMessage(chatId, helpMsg);
+    bot.sendMessage(chatId, helpMsg, {disable_web_page_preview: true});
   }else if(modText === '/schedule'){
-    bot.sendMessage(chatId, waitMsg);
-    const waitHandler = setTimeout(() => (
-      bot.sendMessage(chatId, waitMsg)
-    ), REPLY_WAIT_TIMEOUT);
-    galaktika.getSchedule()
-      .then((scheduleData) => {
-        clearTimeout(waitHandler);
-        const scheduleStr = cinemaScheduleToMsg(scheduleData);
-        let reply = '';
-        reply += `[Кінотеатр "Галактика"](http://galaktika-kino.com.ua/)${DRN}`;
-        reply += `${scheduleStr}${DRN}`;
-        reply += `Бронювання квитків за телефоном:${RN}`;
-        reply += `(067) 534-4-534`;
-        bot.sendMessage(chatId, reply, {parse_mode: 'markdown', disable_web_page_preview: true});
-      })
-      .catch((err)=> {
-        clearTimeout(waitHandler);
-        log.err(err);
-        bot.sendMessage(chatId, serviceUnavaliableMsgh);
-      });
+    onScheduleCommand(msg, chatId);
   }else{
     bot.sendMessage(chatId, sorryMsg);
   }
 });
 
+const onScheduleCommand = async (msg, chatId) => {
+  // Set timeout if operation will take for a wile
+  const waitHandler = setTimeout(() => (
+    bot.sendMessage(chatId, waitMsg)
+  ), REPLY_WAIT_TIMEOUT);
+  try{
+    const cachedScheduleData = await cache.getCache(SCHEDULE_CACHE_KEY);
+    if(cachedScheduleData){
+      log.debug(`[${chatId}] schedule loaded from cache`);
+      // Reset timeout
+      clearTimeout(waitHandler);
+      const reply = galaktikaScheduleToMsg(cachedScheduleData);
+      bot.sendMessage(chatId, reply, {parse_mode: 'markdown', disable_web_page_preview: true});
+    }else{
+      log.debug(`[${chatId}] schedule loaded from website`);
+      const scheduleData = await galaktika.getSchedule();
+      // Reset timeout
+      clearTimeout(waitHandler);
+      // Respond
+      const reply = galaktikaScheduleToMsg(scheduleData);
+      bot.sendMessage(chatId, reply, {parse_mode: 'markdown', disable_web_page_preview: true});
+      log.debug(`[${chatId}] saving schedule to cache`);
+      cache.setCache(SCHEDULE_CACHE_KEY, scheduleData, SCHEDULE_CACHE_EXP);
+    }
+  }catch(err){
+    // Reset timeout
+    clearTimeout(waitHandler);
+    // Log problems
+    log.err(err);
+    bot.sendMessage(chatId, serviceUnavaliableMsgh);
+  }
+}
+
+const galaktikaScheduleToMsg = (scheduleData) => {
+  const scheduleStr = cinemaScheduleToMsg(scheduleData);
+  let reply = '';
+  reply += `[Кінотеатр "Галактика"](http://galaktika-kino.com.ua/)${DRN}`;
+  reply += `${scheduleStr}${DRN}`;
+  reply += `Бронювання квитків за телефоном:${RN}`;
+  reply += `(067) 534-4-534`;
+  return reply;
+}
 
 const cinemaScheduleToMsg = (periods) => {
   let msg = '';
