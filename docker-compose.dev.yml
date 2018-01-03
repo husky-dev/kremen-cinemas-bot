@@ -16,8 +16,11 @@ services:
     working_dir: /usr/src/app
     environment:
       - TELEGRAM_TOKEN=536233288:AAEWievJGXdnU18SVeehwZs9S35iRqRyOic
+      - CACHE_ENABLED=false
     volumes:
       - ./services/telegram-bot:/usr/src/app
+    depends_on:
+      - redis
     command: yarn start
   
   redis:

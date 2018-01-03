@@ -1,8 +1,3 @@
-/*
-/setcommands
-schedule - Розклад сеансів
-help - Допомога
-*/
 // Don't show error when loading telegram api library
 process.env["NTBA_FIX_319"] = 1;
 // Require
@@ -11,10 +6,8 @@ const moment = require('moment');
 const TelegramBot = require('node-telegram-bot-api');
 const {galaktika} = require('./common/services');
 const cache = require('./lib/cache');
-
 // Log
 const log = require('./common/log.js').withModule('app');
-
 // Bot
 const token = process.env.TELEGRAM_TOKEN;
 if(!token){
@@ -23,15 +16,21 @@ if(!token){
 }
 log.info('bot started');
 const bot = new TelegramBot(token, {polling: true});
-
 // Consts
+const env = process.env;
 const REPLY_WAIT_TIMEOUT = 1000;
+const CACHE_ENABLED = (env.CACHE_ENABLED === "false") || (env.CACHE_ENABLED === "0") ? false : true;
 const SCHEDULE_CACHE_KEY = 'cache:schedule';
 const SCHEDULE_CACHE_EXP = 60 * 60;
 const RN = '\r\n';
 const DRN = `${RN}${RN}`;
 
 // Templates
+/*
+/setcommands
+schedule - Розклад сеансів
+help - Допомога
+*/
 const commandsText = `
 /schedule - розклад сеансів
 /help - допомога
@@ -98,7 +97,7 @@ const onScheduleCommand = async (msg, chatId) => {
     bot.sendMessage(chatId, waitMsg)
   ), REPLY_WAIT_TIMEOUT);
   try{
-    const cachedScheduleData = await cache.getCache(SCHEDULE_CACHE_KEY);
+    const cachedScheduleData = CACHE_ENABLED ? await cache.getCache(SCHEDULE_CACHE_KEY) : null;
     if(cachedScheduleData){
       log.debug(`[${chatId}] schedule loaded from cache`);
       // Reset timeout
@@ -113,8 +112,10 @@ const onScheduleCommand = async (msg, chatId) => {
       // Respond
       const reply = galaktikaScheduleToMsg(scheduleData);
       bot.sendMessage(chatId, reply, {parse_mode: 'markdown', disable_web_page_preview: true});
-      log.debug(`[${chatId}] saving schedule to cache`);
-      cache.setCache(SCHEDULE_CACHE_KEY, scheduleData, SCHEDULE_CACHE_EXP);
+      if(CACHE_ENABLED){
+        log.debug(`[${chatId}] saving schedule to cache`);
+        cache.setCache(SCHEDULE_CACHE_KEY, scheduleData, SCHEDULE_CACHE_EXP);
+      }
     }
   }catch(err){
     // Reset timeout
@@ -138,7 +139,7 @@ const galaktikaScheduleToMsg = (scheduleData) => {
 const cinemaScheduleToMsg = (periods) => {
   let msg = '';
   _.each(periods, (period) => {
-    msg = !msg ? periodToMsg(period) : `${DRN}${periodToMsg(period)}`;
+    msg = !msg ? periodToMsg(period) : `${msg}${DRN}${RN}${periodToMsg(period)}`;
   });
   return msg;
 }
@@ -188,8 +189,8 @@ const hallToMsg = (hall) => {
 }
 
 const isPeriodNow = (start, end) => {
-  const startTs = moment(start, "D.M.YYYY").toDate().getTime();
-  const endTs = moment(end, "D.M.YYYY").toDate().getTime();
+  const startTs = moment(start, "DD.M.YYYY").toDate().getTime();
+  const endTs = moment(end, "DD.M.YYYY").toDate().getTime() + 1000 * 60 * 60 * 24;
   const nowTs = (new Date()).getTime();
   return (nowTs >= startTs) && (nowTs <= endTs);
 }

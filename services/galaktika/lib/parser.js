@@ -21,12 +21,14 @@ const getSchedule = async () => {
     if(el.name === 'p'){
       // If it text element - it's can be period info
       const period = parsePeriodFromStr($(el).text());
-      if(periods.length === 1){
-        // If it's first period - just update it
-        periods[0] = {...period, ...periods[0]};
-      }else{
-        // Else - create new one
-        periods.push({...period, halls: []});
+      if(period){
+        if(!periods[0].start){
+          // If it's first period - just update it
+          periods[0] = {...period, ...periods[0]};
+        }else{
+          // Else - create new one
+          periods.push({...period, halls: []});
+        }
       }
     }
     if(el.name === 'table'){
@@ -41,8 +43,10 @@ const getSchedule = async () => {
 
 const parsePeriodFromStr = (str = '') => {
   if(!str) return null;
-  const periodReg = /(\d+\.\d+\.\d+)[\s\S]+(\d+\.\d+\.\d+)/g;
-  const periodMatch = periodReg.exec(str);
+  // Temporary fix (date wrong at the site)
+  let modStr = str.replace(/01\.2017/g, '01.2018');
+  const periodReg = /(\d+\.\d+\.\d+).+?(\d+\.\d+\.\d+)/g;
+  const periodMatch = periodReg.exec(modStr);
   if(!periodMatch) return null;
   else return {start: periodMatch[1], end: periodMatch[2]};
 }

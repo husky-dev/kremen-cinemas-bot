@@ -94,6 +94,6 @@ const errNameForHTTPCode = (code) => {
 
 module.exports = {
   galaktika: {
-    getSchedule: (ul) => galaktikaApiReq({path: '/getSchedule'}),
+    getSchedule: () => galaktikaApiReq({path: '/schedule'}),
   },
 }

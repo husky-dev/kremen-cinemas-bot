@@ -21,7 +21,7 @@ app.get('/', (req,res) => {
   res.result({name, version, description});
 });
 
-app.get('/getSchedule', asyncWrap(async (req,res) => {
+app.get('/schedule', asyncWrap(async (req,res) => {
   res.result(await getSchedule());
 }));
 
