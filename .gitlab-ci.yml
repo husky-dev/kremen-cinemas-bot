@@ -1,4 +1,4 @@
-image: docker/compose
+image: tomav/alpine-docker-compose
 
 services:
   - docker:dind
