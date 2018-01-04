@@ -1,12 +1,13 @@
-image: tvial/alpine-docker-compose
+image: docker:latest
 
 services:
   - docker:dind
 
-before_script:
-  - docker info
-
 build:
   stage: build
   script:
-    - docker-compose -f docker-compose.build.yml build
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.smartapp.com.ua
+    - docker build -t registry.smartapp.com.ua/pet/cinema/galaktika:latest ./services/galaktika
+    - docker push registry.smartapp.com.ua/pet/cinema/galaktika:latest
+    - docker build -t registry.smartapp.com.ua/pet/cinema/telegram-bot:latest ./services/telegram-bot
+    - docker push registry.smartapp.com.ua/pet/cinema/telegram-bot:latest
