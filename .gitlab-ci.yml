@@ -26,4 +26,6 @@ deploy:
     - ssh-add ~/key
     - mkdir -p ~/.ssh
     - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
-    - ssh $SERVER_USER@$SERVER_IP "cd /root/cinema && docker-compose pull && docker-compose down && docker-compose up -d"
+    - ssh $SERVER_USER@$SERVER_IP "cd /root/cinema && docker-compose down"
+    - scp docker-compose.yml $SERVER_USER@$SERVER_IP:/root/cinema/
+    - ssh $SERVER_USER@$SERVER_IP "cd /root/cinema && docker-compose pull && docker-compose up -d"
