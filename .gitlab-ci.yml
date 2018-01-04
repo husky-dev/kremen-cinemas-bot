@@ -6,6 +6,7 @@ services:
 build:
   stage: build
   script:
+    - echo $CI_REGISTRY_IMAGE
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.smartapp.com.ua
     - docker build -t registry.smartapp.com.ua/pet/cinema/galaktika:latest ./services/galaktika
     - docker push registry.smartapp.com.ua/pet/cinema/galaktika:latest
