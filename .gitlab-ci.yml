@@ -22,7 +22,7 @@ deploy:
   script:
     - apk update && apk add openssh-client
     - echo "$SSH_PRIVATE_KEY" > ~/key && chmod 600 ~/key
-    - echo ~/key
+    - echo $SSH_PRIVATE_KEY
     - ssh-add ~/key
     - mkdir -p ~/.ssh
     - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
