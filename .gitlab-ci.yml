@@ -21,10 +21,9 @@ deploy:
   image: alpine:latest
   script:
     - apk update && apk add openssh-client
+    - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" > ~/key && chmod 600 ~/key
-    - cat ~/key
     - ssh-add ~/key
     - mkdir -p ~/.ssh
     - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
     - ssh SERVER_USER@SERVER_IP "cd /root/cinema && docker-compose pull"
-
