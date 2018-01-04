@@ -7,8 +7,8 @@ build:
   stage: build
   script:
     - echo $CI_REGISTRY_IMAGE
-    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.smartapp.com.ua
-    - docker build -t registry.smartapp.com.ua/pet/cinema/galaktika:latest ./services/galaktika
-    - docker push registry.smartapp.com.ua/pet/cinema/galaktika:latest
-    - docker build -t registry.smartapp.com.ua/pet/cinema/telegram-bot:latest ./services/telegram-bot
-    - docker push registry.smartapp.com.ua/pet/cinema/telegram-bot:latest
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+    - docker build -t $CI_REGISTRY_IMAGE/galaktika:latest ./services/galaktika
+    - docker push $CI_REGISTRY_IMAGE/galaktika:latest
+    - docker build -t $CI_REGISTRY_IMAGE/telegram-bot:latest ./services/telegram-bot
+    - docker push $CI_REGISTRY_IMAGE/telegram-bot:latest
