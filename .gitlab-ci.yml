@@ -33,4 +33,4 @@ deploy:
     - mkdir -p ~/.ssh
     - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
     - scp docker-compose.yml $SERVER_USER@$SERVER_IP:/root/cinema/docker-compose.tmp.yml
-    - ssh $SERVER_USER@$SERVER_IP 'cd /root/cinema && docker-compose down && echo -e "TELEGRAM_TOKEN=$TELEGRAM_TOKEN\r\n" > .env && rm -rf docker-compose.yml && mv docker-compose.tmp.yml docker-compose.yml && docker-compose pull && docker-compose up -d'
+    - ssh $SERVER_USER@$SERVER_IP "cd /root/cinema && docker-compose down && echo -e \"TELEGRAM_TOKEN=$TELEGRAM_TOKEN\r\n\" > .env && rm -rf docker-compose.yml && mv docker-compose.tmp.yml docker-compose.yml && docker-compose pull && docker-compose up -d"
