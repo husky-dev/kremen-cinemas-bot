@@ -2,11 +2,8 @@
 
 Telegram bot for sending schedule about seances in the cinemas of the Kremenchuk.
 
-## CI
+## Contacts
 
-Important environments for deployment:
+Jaroslav Khorishchenko
 
-- `SSH_PRIVATE_KEY`
-- `SERVER_IP`
-- `SERVER_USER`
-- `KREMEN_CINEMA_BOT_TOKEN`
+[https://fb.me/snipter](https://fb.me/snipter)
