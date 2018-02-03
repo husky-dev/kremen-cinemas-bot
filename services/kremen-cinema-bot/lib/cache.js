@@ -2,8 +2,10 @@
 const _ = require('lodash');
 const redis = require("redis");
 const client = redis.createClient({host: 'redis'});
+// Consts
+const rootKey = 'cache:kcbot';
 // Log
-const log = require('../common/log.js').withModule('redis');
+const log = require('../common/log.js').withModule('cache');
 
 // Errors catching
 client.on("error", (err) => {
@@ -12,7 +14,8 @@ client.on("error", (err) => {
 
 // Cache
 
-const setCache = (key, value, expire) => new Promise((resolve, reject) => {
+const setCache = (recKey, value, expire) => new Promise((resolve, reject) => {
+  const key = `${rootKey}:${recKey}`;
   let data = null;
   try{
     data = JSON.stringify(value);
@@ -30,7 +33,8 @@ const setCache = (key, value, expire) => new Promise((resolve, reject) => {
   }
 });
 
-const getCache = (key) => new Promise((resolve, reject) => {
+const getCache = (recKey) => new Promise((resolve, reject) => {
+  const key = `${rootKey}:${recKey}`;
   client.get(key, (err, reply) => {
     if(err){
       log.err(`getting cache error: ${err.toString()}`);

@@ -1,10 +1,10 @@
 // Consts
-const {name, version, description} = require('./package.json');
-const {errors} = require('./common/consts.js');
+const { name, version, description } = require('./package.json');
+const { errors } = require('./common/consts.js');
 // Libs
-const {getSchedule} = require('./lib/parser.js');
+const { getSchedule } = require('./lib/parser.js');
 // Common
-const {asyncWrap} = require('./common/async.js');
+const { asyncWrap } = require('./common/async.js');
 const log = require('./common/log.js').withModule('app');
 
 // App

@@ -9,4 +9,4 @@ Important environments for deployment:
 - `SSH_PRIVATE_KEY`
 - `SERVER_IP`
 - `SERVER_USER`
-- `TELEGRAM_TOKEN`
+- `KREMEN_CINEMA_BOT_TOKEN`

@@ -1,129 +1,157 @@
-// Don't show error when loading telegram api library
-process.env["NTBA_FIX_319"] = 1;
 // Require
 const _ = require('lodash');
+const { galaktika } = require('../common/services');
+const cache = require('./cache');
+const stats = require('./stats');
 const moment = require('moment');
 const TelegramBot = require('node-telegram-bot-api');
-const {galaktika} = require('./common/services');
-const cache = require('./lib/cache');
-// Log
-const log = require('./common/log.js').withModule('app');
-// Bot
-const token = process.env.TELEGRAM_TOKEN;
-if(!token){
-  console.error('telegram token not specified');
-  process.exit(1);
-}
-log.info('bot started');
-const bot = new TelegramBot(token, {polling: true});
 // Consts
-const env = process.env;
 const REPLY_WAIT_TIMEOUT = 1000;
-const CACHE_ENABLED = (env.CACHE_ENABLED === "false") || (env.CACHE_ENABLED === "0") ? false : true;
-const SCHEDULE_CACHE_KEY = 'cache:schedule';
+const SCHEDULE_CACHE_KEY = 'schedule';
 const SCHEDULE_CACHE_EXP = 60 * 60;
+const SCHEDULE_GET_EVENT = 'get';
+const SCHEDULE_HELP_EVENT = 'help';
+const SCHEDULE_START_EVENT = 'start';
 const RN = '\r\n';
 const DRN = `${RN}${RN}`;
+// Log
+const log = require('../common/log.js').withModule('bot');
 
-// Templates
+// Commands
 /*
-/setcommands
 schedule - Розклад сеансів
 help - Допомога
 */
+
+// Messages
+
 const commandsText = `
 /schedule - розклад сеансів
 /help - допомога
 `;
+
 const helpMsg = `
 Я вмію виконувати наступні команди:
 ${commandsText}
 Контакти:
 https://fb.me/snipter
 `;
+
 const startMsg = `
 Привіт! Я вмію збирати інформацію про сеанси фільмів в Кременчуці і відправляти їх тобі в зручному форматі. Я можу виконувати наступні команди:
 ${commandsText}
 `;
+
 const sorryMsg = `
 Вибач, але я не зрозумів тебе... Я можу виконувати наступні команди:
 ${commandsText}
 `;
+
 const serviceUnavaliableMsgh = `
 Вибач, але сервіс тимчасово недоступний...
 `;
+
 const waitMsg = `
 Хвилинку...
 `;
 
-/*
-{ message_id: 1,
-  from:
-   { id: 1801040,
-     is_bot: false,
-     first_name: 'Jaroslav',
-     last_name: 'Khorishchenko',
-     username: 'ideveloper' },
-  chat:
-   { id: 1801040,
-     first_name: 'Jaroslav',
-     last_name: 'Khorishchenko',
-     username: 'ideveloper',
-     type: 'private' },
-  date: 1514728849,
-  text: '/start',
-  entities: [ { offset: 0, length: 6, type: 'bot_command' } ] }
-*/
-
-bot.on('message', (msg) => {
-  const chatId = _.get(msg, ['chat', 'id']);
-  const {text} = msg;
-  let modText = text.trim();
-  log.debug(`[${chatId}] ${text}`);
-  if(modText === '/start'){
-    bot.sendMessage(chatId, startMsg);
-  }else if(modText === '/help'){
-    bot.sendMessage(chatId, helpMsg, {disable_web_page_preview: true});
-  }else if(modText === '/schedule'){
-    onScheduleCommand(msg, chatId);
-  }else{
-    bot.sendMessage(chatId, sorryMsg);
+class CinemaBot{
+  constructor({token, cacheEnabled = true}){
+    if(!token) throw new Error('bot token required');
+    this.cacheEnabled = cacheEnabled;
+    this.bot = new TelegramBot(token, {polling: true});
+    this.bot.on('message', this.onMessage.bind(this));
   }
-});
 
-const onScheduleCommand = async (msg, chatId) => {
-  // Set timeout if operation will take for a wile
-  const waitHandler = setTimeout(() => (
-    bot.sendMessage(chatId, waitMsg)
-  ), REPLY_WAIT_TIMEOUT);
-  try{
-    const cachedScheduleData = CACHE_ENABLED ? await cache.getCache(SCHEDULE_CACHE_KEY) : null;
-    if(cachedScheduleData){
-      log.debug(`[${chatId}] schedule loaded from cache`);
-      // Reset timeout
-      clearTimeout(waitHandler);
-      const reply = galaktikaScheduleToMsg(cachedScheduleData);
-      bot.sendMessage(chatId, reply, {parse_mode: 'markdown', disable_web_page_preview: true});
+  onMessage(msg){
+    /*
+    { message_id: 1,
+      from:
+      { id: 1801040,
+        is_bot: false,
+        first_name: 'Jaroslav',
+        last_name: 'Khorishchenko',
+        username: 'ideveloper' },
+      chat:
+      { id: 1801040,
+        first_name: 'Jaroslav',
+        last_name: 'Khorishchenko',
+        username: 'ideveloper',
+        type: 'private' },
+      date: 1514728849,
+      text: '/start',
+      entities: [ { offset: 0, length: 6, type: 'bot_command' } ] }
+    */
+    const chatId = _.get(msg, ['chat', 'id']);
+    const {text} = msg;
+    let modText = text.trim();
+    log.debug(`[${chatId}] ${text}`);
+    if(modText === '/start'){
+      this.onStartCmd(chatId);
+      stats.logEvent(SCHEDULE_START_EVENT);
+    }else if(modText === '/help'){
+      this.onHelpCmd(chatId);
+      stats.logEvent(SCHEDULE_HELP_EVENT);
+    }else if(modText === '/schedule'){
+      this.onScheduleCmd(chatId);
+      stats.logEvent(SCHEDULE_GET_EVENT);
     }else{
-      log.debug(`[${chatId}] schedule loaded from website`);
-      const scheduleData = await galaktika.getSchedule();
+      this.sendMsg(chatId, sorryMsg);
+    }
+  }
+
+  onStartCmd(chatId){
+    this.sendMsg(chatId, startMsg);
+  }
+
+  onHelpCmd(chatId){
+    this.sendMsg(chatId, helpMsg, {disable_web_page_preview: true});
+  }
+
+  async onScheduleCmd(chatId){
+    // Set timeout if operation will take for a wile
+    const waitHandler = setTimeout(() => {
+      this.sendMsg(chatId, waitMsg);
+    }, REPLY_WAIT_TIMEOUT);
+    // Try to get schedule
+    try{
+      const cachedScheduleData = this.cacheEnabled ? await cache.getCache(SCHEDULE_CACHE_KEY) : null;
+      if(cachedScheduleData){
+        log.debug(`schedule loaded from cache`);
+        // Reset timeout
+        clearTimeout(waitHandler);
+        const reply = galaktikaScheduleToMsg(cachedScheduleData);
+        this.sendMsg(chatId, reply, {parse_mode: 'markdown', disable_web_page_preview: true});
+      }else{
+        log.debug(`schedule loaded from website`);
+        const scheduleData = await galaktika.getSchedule();
+        // Reset timeout
+        clearTimeout(waitHandler);
+        // Respond
+        const reply = galaktikaScheduleToMsg(scheduleData);
+        this.sendMsg(chatId, reply, {parse_mode: 'markdown', disable_web_page_preview: true});
+        if(this.cacheEnabled){
+          log.debug(`[${chatId}] saving schedule to cache`);
+          cache.setCache(SCHEDULE_CACHE_KEY, scheduleData, SCHEDULE_CACHE_EXP);
+        }
+      }
+    }catch(err){
       // Reset timeout
       clearTimeout(waitHandler);
-      // Respond
-      const reply = galaktikaScheduleToMsg(scheduleData);
-      bot.sendMessage(chatId, reply, {parse_mode: 'markdown', disable_web_page_preview: true});
-      if(CACHE_ENABLED){
-        log.debug(`[${chatId}] saving schedule to cache`);
-        cache.setCache(SCHEDULE_CACHE_KEY, scheduleData, SCHEDULE_CACHE_EXP);
-      }
+      // Log problems
+      log.err(err);
+      this.sendMsg(chatId, serviceUnavaliableMsgh);
     }
-  }catch(err){
-    // Reset timeout
-    clearTimeout(waitHandler);
-    // Log problems
-    log.err(err);
-    bot.sendMessage(chatId, serviceUnavaliableMsgh);
   }
+
+  sendMsg(chatId, msg, opt){
+    this.bot.sendMessage(chatId, msg, opt);
+  }
+
+  sendTypingAction(chatId){
+    this.bot.sendChatAction(chatId, 'typing');
+  }
+
 }
 
 const galaktikaScheduleToMsg = (scheduleData) => {
@@ -211,3 +239,5 @@ const placesDependsOnCount = (count) => {
   if((modCount >= 5)&&(modCount <= 9)) return 'місць';
   return 'місць';
 }
+
+module.exports = CinemaBot;

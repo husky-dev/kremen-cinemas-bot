@@ -11,7 +11,7 @@ const timeout = (ms) => (
 );
 
 const galaktikaApiReq = ({method, path, data}) => (
-  serviceApiReqWithTrys({method, path, data, host: 'galaktika'})
+  serviceApiReqWithTrys({method, path, data, host: 'cinema-galaktika'})
 );
 
 // Calling service API

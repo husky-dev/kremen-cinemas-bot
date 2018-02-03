@@ -2,18 +2,46 @@ version: '2'
 
 services:
 
-  telegram-bot:
-    image: registry.smartapp.com.ua/pet/cinema/telegram-bot:latest
+  kremen-cinema-bot:
+    image: registry.smartapp.com.ua/pet/kremen-cinema/kremen-cinema-bot:latest
+    container_name: 'kremen-cinema-bot'
+    hostname: 'kremen-cinema-bot'
     restart: always
     environment:
-      - TELEGRAM_TOKEN
+      - KREMEN_CINEMA_BOT_TOKEN
     depends_on:
       - galaktika
       - redis
 
-  galaktika:
-    image: registry.smartapp.com.ua/pet/cinema/galaktika:latest
+  cinema-galaktika:
+    image: registry.smartapp.com.ua/pet/kremen-cinema/cinema-galaktika:latest
+    container_name: 'cinema-galaktika'
+    hostname: 'cinema-galaktika'
     restart: always
 
   redis:
     image: redis:alpine
+    restart: always
+
+  logger:
+    image: umputun/docker-logger
+    container_name: 'logger'
+    hostname: 'logger'
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '5'
+    environment:
+      - LOG_FILES=true
+      - LOG_SYSLOG=false
+      - EXCLUDE=monit,logger
+      - MAX_FILES=10
+      - MAX_SIZE=50
+      - MAX_AGE=20
+      - DEBUG=false
+      - TIME_ZONE=Europe/Kiev
+    volumes:
+      - ./logs:/srv/logs
+      - /var/run/docker.sock:/var/run/docker.sock

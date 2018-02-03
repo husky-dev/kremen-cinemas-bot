@@ -2,8 +2,8 @@
 const _ = require('lodash');
 const iconv = require('iconv-lite');
 const cheerio = require('cheerio');
-const {requestPromisse} = require('../common/async');
-const {erros} = require('../common/consts');
+const { requestPromisse } = require('../common/async');
+const { erros } = require('../common/consts');
 const log = require('../common/log.js').withModule('parser');
 
 // Consts

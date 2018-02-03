@@ -5,7 +5,6 @@ services:
 
 stages:
   - build
-  - deploy
 
 build:
   stage: build
@@ -13,24 +12,7 @@ build:
     - master
   script:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
-    - docker build -t $CI_REGISTRY_IMAGE/galaktika:latest ./services/galaktika
-    - docker push $CI_REGISTRY_IMAGE/galaktika:latest
-    - docker build -t $CI_REGISTRY_IMAGE/telegram-bot:latest ./services/telegram-bot
-    - docker push $CI_REGISTRY_IMAGE/telegram-bot:latest
-
-deploy:
-  stage: deploy
-  image: alpine:latest
-  environment:
-    name: production
-  only:
-    - master
-  script:
-    - apk update && apk add openssh-client
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" > ~/key && chmod 600 ~/key
-    - ssh-add ~/key
-    - mkdir -p ~/.ssh
-    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
-    - scp docker-compose.yml $SERVER_USER@$SERVER_IP:/root/cinema/docker-compose.tmp.yml
-    - ssh $SERVER_USER@$SERVER_IP "cd /root/cinema && docker-compose down && echo -e \"TELEGRAM_TOKEN=$TELEGRAM_TOKEN\r\n\" > .env && rm -rf docker-compose.yml && mv docker-compose.tmp.yml docker-compose.yml && docker-compose pull && docker-compose up -d"
+    - docker build -t $CI_REGISTRY_IMAGE/cinema-galaktika:latest ./services/cinema-galaktika
+    - docker push $CI_REGISTRY_IMAGE/cinema-galaktika:latest
+    - docker build -t $CI_REGISTRY_IMAGE/kremen-cinema-bot:latest ./services/kremen-cinema-bot
+    - docker push $CI_REGISTRY_IMAGE/kremen-cinema-bot:latest
