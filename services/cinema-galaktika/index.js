@@ -6,6 +6,10 @@ const { getSchedule } = require('./lib/parser.js');
 // Common
 const { asyncWrap } = require('./common/async.js');
 const log = require('./common/log.js').withModule('app');
+// Consts
+const contacts = [
+  {mobile: '(067) 534-4-534'},
+];
 
 // App
 const app = require('express')();
@@ -17,12 +21,17 @@ log.info('v' + version);
 log.info(description);
 
 // Root
-app.get('/', (req,res) => {
-  res.result({name, version, description});
-});
+app.get('/', asyncWrap(async (req,res) => {
+  const schedule = await getSchedule();
+  res.result({contacts, schedule});
+}));
 
 app.get('/schedule', asyncWrap(async (req,res) => {
   res.result(await getSchedule());
+}));
+
+app.get('/contacts', asyncWrap(async (req,res) => {
+  res.result(contacts);
 }));
 
 // Default response

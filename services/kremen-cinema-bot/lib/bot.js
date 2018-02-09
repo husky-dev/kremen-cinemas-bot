@@ -4,6 +4,7 @@ const { galaktika } = require('../common/services');
 const cache = require('./cache');
 const stats = require('./stats');
 const moment = require('moment');
+const admin = require('./admin');
 const TelegramBot = require('node-telegram-bot-api');
 // Consts
 const REPLY_WAIT_TIMEOUT = 1000;
@@ -15,7 +16,7 @@ const SCHEDULE_START_EVENT = 'start';
 const RN = '\r\n';
 const DRN = `${RN}${RN}`;
 // Log
-const log = require('../common/log.js').withModule('bot');
+const log = require('./log').withModule('bot');
 
 // Commands
 /*
@@ -47,12 +48,24 @@ const sorryMsg = `
 ${commandsText}
 `;
 
-const serviceUnavaliableMsgh = `
+const serviceErrMsg = `
 Вибач, але сервіс тимчасово недоступний...
 `;
 
 const waitMsg = `
 Хвилинку...
+`;
+
+const loginedMsg = `
+Ви успішно авторизовані у якості адміну!
+`;
+
+const logoutMsg = `
+Ви успішно вийшли з системи
+`;
+
+const logoutErrMsg = `
+Помилка виходу з системи =(
 `;
 
 class CinemaBot{
@@ -86,8 +99,8 @@ class CinemaBot{
     const {text} = msg;
     let modText = text.trim();
     log.debug(`[${chatId}] ${text}`);
-    if(modText === '/start'){
-      this.onStartCmd(chatId);
+    if(modText.indexOf('/start') === 0){
+      this.onStartCmd(chatId, modText);
       stats.logEvent(SCHEDULE_START_EVENT);
     }else if(modText === '/help'){
       this.onHelpCmd(chatId);
@@ -95,13 +108,55 @@ class CinemaBot{
     }else if(modText === '/schedule'){
       this.onScheduleCmd(chatId);
       stats.logEvent(SCHEDULE_GET_EVENT);
+    }else if(modText === '/stats'){
+      this.onStatsCmd(chatId, modText);
+    }else if(modText === '/logout'){
+      this.onLogoutCmd(chatId);
     }else{
       this.sendMsg(chatId, sorryMsg);
     }
   }
 
-  onStartCmd(chatId){
-    this.sendMsg(chatId, startMsg);
+  onStartCmd(chatId, text){
+    if(text === '/start'){
+      this.sendMsg(chatId, startMsg);
+    }else{
+      const regex = /\/start ([\w\d_-]+)/g;
+      const match = regex.exec(text);
+      if(!match) return this.sendMsg(chatId, startMsg);
+      const accessToken = match[1];
+      admin.login(chatId, accessToken).then((isLogined) => {
+        if(!isLogined) return this.sendMsg(chatId, startMsg);
+        else return this.sendMsg(chatId, loginedMsg);
+      }).catch((err) => {
+        log.err(err);
+        this.sendMsg(chatId, serviceErrMsg);
+      });
+    }
+  }
+
+  async onStatsCmd(chatId, text){
+   try{
+    const isAdmin = await admin.isLogined(chatId);
+    if(!isAdmin) return this.sendMsg(chatId, sorryMsg);
+    this.sendMsg(chatId, 'Statistics');
+   }catch(e){
+     log.err(e);
+     this.sendMsg(chatId, serviceErrMsg)
+   }
+  }
+
+  async onLogoutCmd(chatId){
+    try{
+      const isAdmin = await admin.isLogined(chatId);
+      if(!isAdmin) return this.sendMsg(chatId, sorryMsg);
+      const isLogouted = await admin.logout(chatId);
+      if(!isLogouted) return this.sendMsg(chatId, logoutErrMsg);
+      this.sendMsg(chatId, logoutMsg);
+     }catch(e){
+       log.err(e);
+       this.sendMsg(chatId, serviceErrMsg)
+     }
   }
 
   onHelpCmd(chatId){
@@ -140,7 +195,7 @@ class CinemaBot{
       clearTimeout(waitHandler);
       // Log problems
       log.err(err);
-      this.sendMsg(chatId, serviceUnavaliableMsgh);
+      this.sendMsg(chatId, serviceErrMsg);
     }
   }
 

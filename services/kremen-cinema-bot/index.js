@@ -3,7 +3,7 @@ process.env["NTBA_FIX_319"] = 1;
 // Require
 const Bot = require('./lib/bot');
 // Log
-const log = require('./common/log.js').withModule('app');
+const log = require('./lib/log').withModule('app');
 
 const env = process.env;
 if(!env.KREMEN_CINEMA_BOT_TOKEN){

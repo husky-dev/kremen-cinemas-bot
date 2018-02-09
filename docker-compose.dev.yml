@@ -16,6 +16,7 @@ services:
     working_dir: /usr/src/app
     environment:
       - KREMEN_CINEMA_BOT_TOKEN
+      - KREMEN_CINEMA_BOT_ADMIN
       - CACHE_ENABLED=false
     volumes:
       - ./services/kremen-cinema-bot:/usr/src/app
@@ -25,4 +26,5 @@ services:
   
   redis:
     image: redis:alpine
-  
+    volumes:
+      - ./data/redis:/data

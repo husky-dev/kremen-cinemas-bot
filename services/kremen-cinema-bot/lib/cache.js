@@ -1,16 +1,10 @@
 // Require
 const _ = require('lodash');
-const redis = require("redis");
-const client = redis.createClient({host: 'redis'});
+const { client, projectKey } = require('./redis');
 // Consts
-const rootKey = 'cache:kcbot';
+const rootKey = `${projectKey}:cache`;
 // Log
-const log = require('../common/log.js').withModule('cache');
-
-// Errors catching
-client.on("error", (err) => {
-  log.err(err);
-});
+const log = require('./log').withModule('cache');
 
 // Cache
 

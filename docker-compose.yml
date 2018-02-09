@@ -9,6 +9,7 @@ services:
     restart: always
     environment:
       - KREMEN_CINEMA_BOT_TOKEN
+      - KREMEN_CINEMA_BOT_ADMIN
     depends_on:
       - cinema-galaktika
       - redis
