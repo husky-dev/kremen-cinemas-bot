@@ -52,6 +52,10 @@ const serviceErrMsg = `
 Вибач, але сервіс тимчасово недоступний...
 `;
 
+const cmdParamErr = `
+Невірний параметр команди
+`;
+
 const waitMsg = `
 Хвилинку...
 `;
@@ -68,6 +72,36 @@ const logoutErrMsg = `
 Помилка виходу з системи =(
 `;
 
+// Helpers
+
+const strFromCmd = (text) => {
+  const regex = /\/[\w\d_-]+ ([\w\d_-]+)/g;
+  const match = regex.exec(text);
+  return match ? match[1] : null;
+}
+
+const periodToResolution = (period) => {
+  if(period === 'year') return 'month';
+  if(period === 'month') return 'week';
+  if(period === 'week') return 'day';
+  if(period === 'day') return 'hour';
+  return 'hour';
+}
+
+const statsDataToMsg = (start, end, data) => {
+  const startStr = moment(start).format('YYYY-MM-DD');
+  const endStr = moment(end).format('YYYY-MM-DD');
+  let msg = `*${startStr}* - *${endStr}*${DRN}`;
+  let total = 0;
+  _.each(data, (val, key) => {
+    total += val;
+    msg += `*${key}*: ${val}${RN}`;
+  })
+  msg += `${RN}Total: ${total}`;
+  return msg;
+};
+
+// CinemaBot
 class CinemaBot{
   constructor({token, cacheEnabled = true}){
     if(!token) throw new Error('bot token required');
@@ -108,7 +142,7 @@ class CinemaBot{
     }else if(modText === '/schedule'){
       this.onScheduleCmd(chatId);
       stats.logEvent(SCHEDULE_GET_EVENT);
-    }else if(modText === '/stats'){
+    }else if(modText.indexOf('/stats') === 0){
       this.onStatsCmd(chatId, modText);
     }else if(modText === '/logout'){
       this.onLogoutCmd(chatId);
@@ -139,7 +173,16 @@ class CinemaBot{
    try{
     const isAdmin = await admin.isLogined(chatId);
     if(!isAdmin) return this.sendMsg(chatId, sorryMsg);
-    this.sendMsg(chatId, 'Statistics');
+    const period = strFromCmd(text) || 'week';
+    if(['day', 'week', 'month', 'year'].indexOf(period) === -1){
+      return this.sendMsg(chatId, cmdParamErr);
+    }
+    const resolution = periodToResolution(period);
+    const end = new Date();
+    const start = moment(end).subtract(1, period).toDate();
+    const data = await stats.getEventStatsForPeriod(SCHEDULE_GET_EVENT, start, end, resolution);
+    const msg = statsDataToMsg(start, end, data);
+    this.sendMsg(chatId, msg, { parse_mode: 'markdown' });
    }catch(e){
      log.err(e);
      this.sendMsg(chatId, serviceErrMsg)

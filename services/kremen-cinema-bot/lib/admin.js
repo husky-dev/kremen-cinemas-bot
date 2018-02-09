@@ -3,6 +3,8 @@ const { client, projectKey } = require('./redis');
 // Consts
 const adminsKey = `${projectKey}:admins`;
 const ACCESS_TOKEN = process.env.KREMEN_CINEMA_BOT_ADMIN;
+// Log
+const log = require('./log').withModule('admin');
 
 // Functions
 
@@ -15,7 +17,7 @@ const isLogined = (chatId) => new Promise((resolve, reject) => {
 
 const login = (chatId, token) => new Promise((resolve, reject) => {
   if(!ACCESS_TOKEN){
-    log.warn(`trying to login without ${KREMEN_CINEMA_BOT_ADMIN} provided`);
+    log.warn(`trying to login without KREMEN_CINEMA_BOT_ADMIN provided`);
     return resolve(false);
   }
   if(token !== ACCESS_TOKEN) return resolve(false);
