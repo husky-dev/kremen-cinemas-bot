@@ -1,8 +1,8 @@
 // Require
-const { requestPromisse } = require('./async.js');
 const _ = require('lodash');
+const { requestPromisse } = require('./async.js');
 // Consts
-const {errors, codes} = require('./consts.js');
+const { errors, codes } = require('./consts.js');
 const MAX_TRYS_COUNT = 3;
 
 // Helpers
@@ -94,6 +94,7 @@ const errNameForHTTPCode = (code) => {
 
 module.exports = {
   galaktika: {
+    getData: () => galaktikaApiReq({path: '/'}),
     getSchedule: () => galaktikaApiReq({path: '/schedule'}),
   },
 }

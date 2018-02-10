@@ -1,76 +1,48 @@
 // Require
 const _ = require('lodash');
-const { galaktika } = require('../common/services');
 const cache = require('./cache');
-const stats = require('./stats');
-const moment = require('moment');
 const admin = require('./admin');
+const chats = require('./chats');
 const TelegramBot = require('node-telegram-bot-api');
+const {
+  statsMsgForPeriod,
+  logEvent,
+} = require('./stats');
+const {
+  getCinemasData,
+  cinemsDataToMsg,
+} = require('./cinemas');
 // Consts
 const REPLY_WAIT_TIMEOUT = 1000;
 const SCHEDULE_CACHE_KEY = 'schedule';
 const SCHEDULE_CACHE_EXP = 60 * 60;
-const SCHEDULE_GET_EVENT = 'get';
-const SCHEDULE_HELP_EVENT = 'help';
-const SCHEDULE_START_EVENT = 'start';
-const RN = '\r\n';
-const DRN = `${RN}${RN}`;
+// Events
+const GET_EVENT = 'get';
+const HELP_EVENT = 'help';
+const START_EVENT = 'start';
+const SUBSCRIBE_EVENT = 'subscribe';
+const UNSUBSCRIBE_EVENT = 'unsubscribe';
+// Groups
+const UNSUBSCRIBE_GROUP ='unsubscribe';
+// Messages
+const {
+  RN,
+  DRN,
+  commandsText,
+  helpMsg,
+  startMsg,
+  sorryMsg,
+  serviceErrMsg,
+  cmdParamErr,
+  waitMsg,
+  loginedMsg,
+  logoutMsg,
+  logoutErrMsg,
+  subscribeMsg,
+  unsubscribeMsg,
+} = require('./msg');
 // Log
 const log = require('./log').withModule('bot');
-
-// Commands
-/*
-schedule - Розклад сеансів
-help - Допомога
-*/
-
-// Messages
-
-const commandsText = `
-/schedule - розклад сеансів
-/help - допомога
-`;
-
-const helpMsg = `
-Я вмію виконувати наступні команди:
-${commandsText}
-Контакти:
-https://fb.me/snipter
-`;
-
-const startMsg = `
-Привіт! Я вмію збирати інформацію про сеанси фільмів в Кременчуці і відправляти їх тобі в зручному форматі. Я можу виконувати наступні команди:
-${commandsText}
-`;
-
-const sorryMsg = `
-Вибач, але я не зрозумів тебе... Я можу виконувати наступні команди:
-${commandsText}
-`;
-
-const serviceErrMsg = `
-Вибач, але сервіс тимчасово недоступний...
-`;
-
-const cmdParamErr = `
-Невірний параметр команди
-`;
-
-const waitMsg = `
-Хвилинку...
-`;
-
-const loginedMsg = `
-Ви успішно авторизовані у якості адміну!
-`;
-
-const logoutMsg = `
-Ви успішно вийшли з системи
-`;
-
-const logoutErrMsg = `
-Помилка виходу з системи =(
-`;
 
 // Helpers
 
@@ -79,27 +51,6 @@ const strFromCmd = (text) => {
   const match = regex.exec(text);
   return match ? match[1] : null;
 }
-
-const periodToResolution = (period) => {
-  if(period === 'year') return 'month';
-  if(period === 'month') return 'week';
-  if(period === 'week') return 'day';
-  if(period === 'day') return 'hour';
-  return 'hour';
-}
-
-const statsDataToMsg = (start, end, data) => {
-  const startStr = moment(start).format('YYYY-MM-DD');
-  const endStr = moment(end).format('YYYY-MM-DD');
-  let msg = `*${startStr}* - *${endStr}*${DRN}`;
-  let total = 0;
-  _.each(data, (val, key) => {
-    total += val;
-    msg += `*${key}*: ${val}${RN}`;
-  })
-  msg += `${RN}Total: ${total}`;
-  return msg;
-};
 
 // CinemaBot
 class CinemaBot{
@@ -135,20 +86,29 @@ class CinemaBot{
     log.debug(`[${chatId}] ${text}`);
     if(modText.indexOf('/start') === 0){
       this.onStartCmd(chatId, modText);
-      stats.logEvent(SCHEDULE_START_EVENT);
-    }else if(modText === '/help'){
+      logEvent(START_EVENT);
+    }else if(modText.indexOf('/help') === 0){
       this.onHelpCmd(chatId);
-      stats.logEvent(SCHEDULE_HELP_EVENT);
-    }else if(modText === '/schedule'){
+      logEvent(HELP_EVENT);
+    }else if(modText.indexOf('/schedule') === 0){
       this.onScheduleCmd(chatId);
-      stats.logEvent(SCHEDULE_GET_EVENT);
+      logEvent(GET_EVENT);
+    }else if(modText.indexOf('/subscribe') === 0){
+      this.onSubscribeCmd(chatId);
+      logEvent(SUBSCRIBE_EVENT);
+    }else if(modText.indexOf('/unsubscribe') === 0){
+      this.onUnsubscribeCmd(chatId);
+      logEvent(UNSUBSCRIBE_EVENT);
+    }else if(modText.indexOf('/notify') === 0){
+      this.onNotifyCmd(chatId, modText);
     }else if(modText.indexOf('/stats') === 0){
       this.onStatsCmd(chatId, modText);
-    }else if(modText === '/logout'){
+    }else if(modText.indexOf('/logout') === 0){
       this.onLogoutCmd(chatId);
     }else{
       this.sendMsg(chatId, sorryMsg);
     }
+    chats.add(chatId);
   }
 
   onStartCmd(chatId, text){
@@ -177,11 +137,7 @@ class CinemaBot{
     if(['day', 'week', 'month', 'year'].indexOf(period) === -1){
       return this.sendMsg(chatId, cmdParamErr);
     }
-    const resolution = periodToResolution(period);
-    const end = new Date();
-    const start = moment(end).subtract(1, period).toDate();
-    const data = await stats.getEventStatsForPeriod(SCHEDULE_GET_EVENT, start, end, resolution);
-    const msg = statsDataToMsg(start, end, data);
+    const msg = await statsMsgForPeriod(period);
     this.sendMsg(chatId, msg, { parse_mode: 'markdown' });
    }catch(e){
      log.err(e);
@@ -213,26 +169,12 @@ class CinemaBot{
     }, REPLY_WAIT_TIMEOUT);
     // Try to get schedule
     try{
-      const cachedScheduleData = this.cacheEnabled ? await cache.getCache(SCHEDULE_CACHE_KEY) : null;
-      if(cachedScheduleData){
-        log.debug(`schedule loaded from cache`);
-        // Reset timeout
-        clearTimeout(waitHandler);
-        const reply = galaktikaScheduleToMsg(cachedScheduleData);
-        this.sendMsg(chatId, reply, {parse_mode: 'markdown', disable_web_page_preview: true});
-      }else{
-        log.debug(`schedule loaded from website`);
-        const scheduleData = await galaktika.getSchedule();
-        // Reset timeout
-        clearTimeout(waitHandler);
-        // Respond
-        const reply = galaktikaScheduleToMsg(scheduleData);
-        this.sendMsg(chatId, reply, {parse_mode: 'markdown', disable_web_page_preview: true});
-        if(this.cacheEnabled){
-          log.debug(`[${chatId}] saving schedule to cache`);
-          cache.setCache(SCHEDULE_CACHE_KEY, scheduleData, SCHEDULE_CACHE_EXP);
-        }
-      }
+      const cinemasData = await this.getCachedCinemasData();
+      // Reset timeout
+      clearTimeout(waitHandler);
+      // Reply
+      const cinemasMsg = cinemsDataToMsg(cinemasData);
+      this.sendMsg(chatId, cinemasMsg, {parse_mode: 'markdown', disable_web_page_preview: true});
     }catch(err){
       // Reset timeout
       clearTimeout(waitHandler);
@@ -242,6 +184,40 @@ class CinemaBot{
     }
   }
 
+  // Subscriptions
+
+  onSubscribeCmd(chatId){
+    chats.removeFromGroup(chatId, UNSUBSCRIBE_GROUP);
+    this.sendMsg(chatId, subscribeMsg);
+  }
+
+  onUnsubscribeCmd(chatId){
+    chats.addToGroup(chatId, UNSUBSCRIBE_GROUP);
+    this.sendMsg(chatId, unsubscribeMsg);
+  }
+
+  async onNotifyCmd(chatId, text){
+    try{
+      const isAdmin = await admin.isLogined(chatId);
+      if(!isAdmin) return this.sendMsg(chatId, sorryMsg);
+      const msg = text.replace('/notify', '').trim();
+      await this.notifySubscrUsersWithMsg(msg);
+     }catch(e){
+       log.err(e);
+       this.sendMsg(chatId, serviceErrMsg)
+     }
+  }
+
+  async notifySubscrUsersWithMsg(msg){
+    const subscrChats = await chats.getNotInGroup(UNSUBSCRIBE_GROUP);
+    log(`sending notification with text: "${msg}", users: ${subscrChats.length}`);
+    for(const subscrChatId of subscrChats){
+      this.sendMsg(subscrChatId, msg);
+    }
+  }
+
+  // Bot
+
   sendMsg(chatId, msg, opt){
     this.bot.sendMessage(chatId, msg, opt);
   }
@@ -250,92 +226,25 @@ class CinemaBot{
     this.bot.sendChatAction(chatId, 'typing');
   }
 
-}
+  // Data
 
-const galaktikaScheduleToMsg = (scheduleData) => {
-  const scheduleStr = cinemaScheduleToMsg(scheduleData);
-  let reply = '';
-  reply += `[Кінотеатр "Галактика"](http://galaktika-kino.com.ua/)${DRN}`;
-  reply += `${scheduleStr}${DRN}`;
-  reply += `Бронювання квитків за телефоном:${RN}`;
-  reply += `(067) 534-4-534`;
-  return reply;
-}
-
-const cinemaScheduleToMsg = (periods) => {
-  let msg = '';
-  _.each(periods, (period) => {
-    msg = !msg ? periodToMsg(period) : `${msg}${DRN}${RN}${periodToMsg(period)}`;
-  });
-  return msg;
-}
-
-const periodToMsg = (period) => {
-  let msg = '';
-  if(period.start && period.end){
-    if(isPeriodNow(period.start, period.end)){
-      msg += `*Зараз у кіно*`;
-    }else{
-      msg += `*${period.start}* - *${period.end}*`;
+  async getCachedCinemasData(){
+    if(!this.cacheEnabled){
+      log.debug(`cache disabled, loading cinemas data from api`);
+      return await getCinemasData();
     }
-    msg += DRN;
-    msg += hallsToMsg(period.halls);
+    const cachedData = await cache.getCache(SCHEDULE_CACHE_KEY);
+    if(cachedData){
+      log.debug(`loading cinemas data from cache`);
+      return cachedData;
+    }
+    log.debug(`loading cinemas data from api`);
+    const data = await getCinemasData();
+    log.debug(`saving data to cache`);
+    cache.setCache(SCHEDULE_CACHE_KEY, data, SCHEDULE_CACHE_EXP);
+    return data;
   }
-  return msg;
-}
 
-const hallsToMsg = (halls) => {
-  let msg = '';
-  _.each(halls, hall => {
-    msg += !msg ? hallToMsg(hall) : `${DRN}${hallToMsg(hall)}`;
-  })
-  return msg;
-}
-
-const hallToMsg = (hall) => {
-  let msg = '';
-  if(hall.name){
-    msg += `*${hall.name}*`;
-    if(hall.places){
-      msg += ` *(${hall.places} ${placesDependsOnCount(hall.places)})*`
-    }
-    msg += `${RN}`;
-  }
-  _.each(hall.sessions, ({title, format, time, price}) => {
-    msg += `${RN}\`${time}:\``;
-    if(format){
-      msg += ` (${format})`;
-    }
-    msg += ` ${title}`;
-    if(price){
-      msg += ` - ${price} грн.`;
-    }
-  });
-  return msg;
-}
-
-const isPeriodNow = (start, end) => {
-  const startTs = moment(start, "DD.M.YYYY").toDate().getTime();
-  const endTs = moment(end, "DD.M.YYYY").toDate().getTime() + 1000 * 60 * 60 * 24;
-  const nowTs = (new Date()).getTime();
-  return (nowTs >= startTs) && (nowTs <= endTs);
-}
-
-const placesDependsOnCount = (count) => {
-  if(!count) return 'місць';
-  if(count === 1) return 'місце';
-  if((count >= 2)&&(count <= 4)) return 'місця';
-  if((count >= 5)&&(count <= 19)) return 'місць';
-  let modCount = count;
-  if(modCount < 100){
-    modCount = modCount % 10;
-  }else{
-    modCount = modCount % 10;
-  }
-  if(modCount === 1) return 'місце';
-  if((modCount >= 2)&&(modCount <= 4)) return 'місця';
-  if((modCount >= 5)&&(modCount <= 9)) return 'місць';
-  return 'місць';
 }
 
 module.exports = CinemaBot;

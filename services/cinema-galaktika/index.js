@@ -7,6 +7,8 @@ const { getSchedule } = require('./lib/parser.js');
 const { asyncWrap } = require('./common/async.js');
 const log = require('./common/log.js').withModule('app');
 // Consts
+const title = 'Кінотеатр "Галактика"';
+const website = 'http://galaktika-kino.com.ua/';
 const contacts = [
   {mobile: '(067) 534-4-534'},
 ];
@@ -23,15 +25,11 @@ log.info(description);
 // Root
 app.get('/', asyncWrap(async (req,res) => {
   const schedule = await getSchedule();
-  res.result({contacts, schedule});
+  res.result({title, website, contacts, schedule});
 }));
 
 app.get('/schedule', asyncWrap(async (req,res) => {
   res.result(await getSchedule());
-}));
-
-app.get('/contacts', asyncWrap(async (req,res) => {
-  res.result(contacts);
 }));
 
 // Default response

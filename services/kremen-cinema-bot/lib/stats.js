@@ -1,5 +1,6 @@
 // Require
 const _ = require('lodash');
+const moment = require('moment');
 const { client, projectKey } = require('./redis');
 const { hourMs, pad } = require('./utils');
 // Consts
@@ -8,7 +9,38 @@ const eventsKey = `${rootKey}:events`;
 // Log
 const log = require('./log').withModule('stats');
 
-// Cache
+// Text
+
+const periodToResolution = (period) => {
+  if(period === 'year') return 'month';
+  if(period === 'month') return 'week';
+  if(period === 'week') return 'day';
+  if(period === 'day') return 'hour';
+  return 'hour';
+}
+
+const statsDataToMsg = (start, end, data) => {
+  const startStr = moment(start).format('YYYY-MM-DD');
+  const endStr = moment(end).format('YYYY-MM-DD');
+  let msg = `*${startStr}* - *${endStr}*${DRN}`;
+  let total = 0;
+  _.each(data, (val, key) => {
+    total += val;
+    msg += `*${key}*: ${val}${RN}`;
+  })
+  msg += `${RN}Total: ${total}`;
+  return msg;
+};
+
+const statsMsgForPeriod = async (period) => {
+  const end = new Date();
+  const start = moment(end).subtract(1, period).toDate();
+  const resolution = periodToResolution(period);
+  const data = await stats.getEventStatsForPeriod(SCHEDULE_GET_EVENT, start, end, resolution);
+  return statsDataToMsg(start, end, data);
+}
+
+// Cunctionality
 
 const eventKeyWithDate = (eventName, date) => {
   const year = date.getFullYear();
@@ -83,5 +115,6 @@ const getIntVal = (key) => new Promise((resolve, reject) => {
 // Exports
 module.exports = {
   logEvent,
+  statsMsgForPeriod,
   getEventStatsForPeriod,
 }
