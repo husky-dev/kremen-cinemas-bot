@@ -5,7 +5,15 @@ const admin = require('./admin');
 const chats = require('./chatsStore');
 const moviesStore = require('./moviesStore');
 const TelegramBot = require('node-telegram-bot-api');
-const { statsMsgForPeriod, logEvent } = require('./stats');
+const { 
+  statsMsgForPeriod, 
+  logEvent,
+  GET_EVENT,
+  HELP_EVENT,
+  START_EVENT,
+  SUBSCRIBE_EVENT,
+  UNSUBSCRIBE_EVENT,
+} = require('./stats');
 const {
   getCinemasData,
   cinemsDataToMsg,
@@ -17,12 +25,6 @@ const REPLY_WAIT_TIMEOUT = secondMs;
 const CHECK_NEW_MOVIES_INTERVAL = hourMs;
 const SCHEDULE_CACHE_KEY = 'schedule';
 const SCHEDULE_CACHE_EXP = 60 * 60;
-// Events
-const GET_EVENT = 'get';
-const HELP_EVENT = 'help';
-const START_EVENT = 'start';
-const SUBSCRIBE_EVENT = 'subscribe';
-const UNSUBSCRIBE_EVENT = 'unsubscribe';
 // Groups
 const UNSUBSCRIBE_GROUP ='unsubscribe';
 // Messages

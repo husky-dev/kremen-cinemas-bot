@@ -3,9 +3,16 @@ const _ = require('lodash');
 const moment = require('moment');
 const { client, projectKey } = require('./redis');
 const { hourMs, pad } = require('./utils');
+const { RN, DRN } = require('./msg');
 // Consts
 const rootKey = `${projectKey}:stats`;
 const eventsKey = `${rootKey}:events`;
+// Events
+const GET_EVENT = 'get';
+const HELP_EVENT = 'help';
+const START_EVENT = 'start';
+const SUBSCRIBE_EVENT = 'subscribe';
+const UNSUBSCRIBE_EVENT = 'unsubscribe';
 // Log
 const log = require('./log').withModule('stats');
 
@@ -36,7 +43,7 @@ const statsMsgForPeriod = async (period) => {
   const end = new Date();
   const start = moment(end).subtract(1, period).toDate();
   const resolution = periodToResolution(period);
-  const data = await getEventStatsForPeriod(SCHEDULE_GET_EVENT, start, end, resolution);
+  const data = await getEventStatsForPeriod(GET_EVENT, start, end, resolution);
   return statsDataToMsg(start, end, data);
 }
 
@@ -117,4 +124,9 @@ module.exports = {
   logEvent,
   statsMsgForPeriod,
   getEventStatsForPeriod,
+  GET_EVENT,
+  HELP_EVENT,
+  START_EVENT,
+  SUBSCRIBE_EVENT,
+  UNSUBSCRIBE_EVENT,
 }
