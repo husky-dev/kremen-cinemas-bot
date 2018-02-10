@@ -11,6 +11,27 @@ const getCinemasData = async () => {
   return [galaktikaData]
 }
 
+const moviesListFromCinemasData = (cinemas) => {
+  const movies = [];
+  cinemas.forEach((cinema) => {
+    const { schedule } = cinema;
+    if(!schedule) return;
+    schedule.forEach((period) => {
+      const { halls } = period;
+      if(!halls) return;
+      halls.forEach((hall) => {
+        const { sessions } = hall;
+        sessions.forEach((session) => {
+          if(session.title){
+            movies.push(session.title);
+          }
+        });
+      });
+    });
+  });
+  return _.uniq(movies);
+}
+
 // Text
 
 const cinemsDataToMsg = (items) => {
@@ -115,4 +136,5 @@ const placesDependsOnCount = (count) => {
 module.exports = {
   getCinemasData,
   cinemsDataToMsg,
+  moviesListFromCinemasData,
 }

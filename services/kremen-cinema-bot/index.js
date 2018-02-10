@@ -12,6 +12,6 @@ if(!env.KREMEN_CINEMA_BOT_TOKEN){
 }
 const token = env.KREMEN_CINEMA_BOT_TOKEN;
 const cacheEnabled = (env.CACHE_ENABLED === "false") || (env.CACHE_ENABLED === "0") ? false : true;
-const bot = new Bot({token, cacheEnabled});
 log.debug(cacheEnabled ? 'cache enabled' : 'cache disabled');
+const bot = new Bot({token, cacheEnabled});
 log.info('bot started');

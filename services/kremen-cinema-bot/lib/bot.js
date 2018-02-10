@@ -2,18 +2,19 @@
 const _ = require('lodash');
 const cache = require('./cache');
 const admin = require('./admin');
-const chats = require('./chats');
+const chats = require('./chatsStore');
+const moviesStore = require('./moviesStore');
 const TelegramBot = require('node-telegram-bot-api');
-const {
-  statsMsgForPeriod,
-  logEvent,
-} = require('./stats');
+const { statsMsgForPeriod, logEvent } = require('./stats');
 const {
   getCinemasData,
   cinemsDataToMsg,
+  moviesListFromCinemasData,
 } = require('./cinemas');
+const { secondMs, hourMs } = require('./utils');
 // Consts
-const REPLY_WAIT_TIMEOUT = 1000;
+const REPLY_WAIT_TIMEOUT = secondMs;
+const CHECK_NEW_MOVIES_INTERVAL = hourMs;
 const SCHEDULE_CACHE_KEY = 'schedule';
 const SCHEDULE_CACHE_EXP = 60 * 60;
 // Events
@@ -56,9 +57,17 @@ const strFromCmd = (text) => {
 class CinemaBot{
   constructor({token, cacheEnabled = true}){
     if(!token) throw new Error('bot token required');
+    // Configs
     this.cacheEnabled = cacheEnabled;
+    // Bot
     this.bot = new TelegramBot(token, {polling: true});
     this.bot.on('message', this.onMessage.bind(this));
+    // Checkers
+    this.newMoviesHandler = setInterval(
+      () => this.onCheckForNewMovies().catch(err => log.err(err)), 
+      CHECK_NEW_MOVIES_INTERVAL
+    );
+    this.onCheckForNewMovies().catch(err => log.err(err));
   }
 
   onMessage(msg){
@@ -83,7 +92,7 @@ class CinemaBot{
     const chatId = _.get(msg, ['chat', 'id']);
     const {text} = msg;
     let modText = text.trim();
-    log.debug(`[${chatId}] ${text}`);
+    log.debug(`(${chatId}) ${text}`);
     if(modText.indexOf('/start') === 0){
       this.onStartCmd(chatId, modText);
       logEvent(START_EVENT);
@@ -212,7 +221,30 @@ class CinemaBot{
     const subscrChats = await chats.getNotInGroup(UNSUBSCRIBE_GROUP);
     log(`sending notification with text: "${msg}", users: ${subscrChats.length}`);
     for(const subscrChatId of subscrChats){
-      this.sendMsg(subscrChatId, msg);
+      this.sendMsg(subscrChatId, msg, {parse_mode: 'markdown'});
+    }
+  }
+
+  // New movies
+
+  async onCheckForNewMovies(){
+    log('checking for new movies');
+    const cinemasData = await this.getCachedCinemasData();
+    const movies = moviesListFromCinemasData(cinemasData);
+    const notNotifiedMovies = await moviesStore.filterNotNotified(movies);
+    if(notNotifiedMovies.length){
+      let msg = `З'явились нові фільми:${RN}`;
+      for(const movie of notNotifiedMovies){
+        msg += `${RN}- ${movie}`;
+      }
+      const adminChats = await admin.getChats();
+      log(`sending information about new movies to ${adminChats.length} admins`);
+      for(const adminChat of adminChats){
+        this.sendMsg(adminChat, msg);
+      }
+      await moviesStore.addToNotified(notNotifiedMovies);
+    }else{
+      log('new movies not found');
     }
   }
 
