@@ -33,9 +33,9 @@ const statsDataToMsg = (start, end, data) => {
   let total = 0;
   _.each(data, (val, key) => {
     total += val;
-    msg += `*${key}*: ${val}${RN}`;
+    msg += `\`${key}\`: ${val}${RN}`;
   })
-  msg += `${RN}Total: ${total}`;
+  msg += `${RN}\`Total\`: ${total}`;
   return msg;
 };
 
