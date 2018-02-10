@@ -36,7 +36,7 @@ const statsMsgForPeriod = async (period) => {
   const end = new Date();
   const start = moment(end).subtract(1, period).toDate();
   const resolution = periodToResolution(period);
-  const data = await stats.getEventStatsForPeriod(SCHEDULE_GET_EVENT, start, end, resolution);
+  const data = await getEventStatsForPeriod(SCHEDULE_GET_EVENT, start, end, resolution);
   return statsDataToMsg(start, end, data);
 }
 
