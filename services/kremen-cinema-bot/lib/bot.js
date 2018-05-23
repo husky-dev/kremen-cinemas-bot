@@ -1,4 +1,5 @@
-// Require
+'use strict';
+
 const _ = require('lodash');
 const cache = require('./cache');
 const admin = require('./admin');
@@ -6,26 +7,16 @@ const chats = require('./chatsStore');
 const moviesStore = require('./moviesStore');
 const TelegramBot = require('node-telegram-bot-api');
 const { 
-  statsMsgForPeriod, 
-  logEvent,
-  GET_EVENT,
-  HELP_EVENT,
-  START_EVENT,
-  SUBSCRIBE_EVENT,
-  UNSUBSCRIBE_EVENT,
+  statsMsgForPeriod, logEvent, GET_EVENT, HELP_EVENT, START_EVENT, SUBSCRIBE_EVENT, UNSUBSCRIBE_EVENT,
 } = require('./stats');
 const {
-  getCinemasData,
-  cinemsDataToMsg,
-  moviesListFromCinemasData,
+  getCinemasData, cinemsDataToMsg, moviesListFromCinemasData,
 } = require('./cinemas');
 const { secondMs, hourMs } = require('./utils');
-// Consts
 const REPLY_WAIT_TIMEOUT = secondMs;
 const CHECK_NEW_MOVIES_INTERVAL = hourMs;
 const SCHEDULE_CACHE_KEY = 'schedule';
 const SCHEDULE_CACHE_EXP = 60 * 60;
-// Groups
 const UNSUBSCRIBE_GROUP ='unsubscribe';
 // Messages
 const {
@@ -44,7 +35,6 @@ const {
   subscribeMsg,
   unsubscribeMsg,
 } = require('./msg');
-// Log
 const log = require('./log').withModule('bot');
 
 // Helpers
@@ -55,8 +45,10 @@ const strFromCmd = (text) => {
   return match ? match[1] : null;
 }
 
-// CinemaBot
-class CinemaBot{
+/**
+ * CinemaBot
+ */
+class CinemaBot {
   constructor({token, cacheEnabled = true}){
     if(!token) throw new Error('bot token required');
     // Configs

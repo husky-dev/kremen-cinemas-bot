@@ -15,7 +15,6 @@ RUN yarn install --production
 
 # Bundle app source
 COPY index.js /usr/src/app
-COPY common /usr/src/app/common
 COPY lib /usr/src/app/lib
 
 CMD ["/wait-for", "redis:6379", "--", "yarn", "start" ]

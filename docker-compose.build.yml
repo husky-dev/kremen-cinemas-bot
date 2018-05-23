@@ -2,10 +2,6 @@ version: '2'
 
 services:
 
-  cinema-galaktika:
-    image: registry.smartapp.com.ua/pet/kremen-cinema/cinema-galaktika:latest
-    build: ./services/cinema-galaktika
-
   kremen-cinema-bot:
     image: registry.smartapp.com.ua/pet/kremen-cinema/kremen-cinema-bot:latest
     build: ./services/kremen-cinema-bot

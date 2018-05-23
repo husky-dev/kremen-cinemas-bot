@@ -1,14 +1,30 @@
-// Require
+'use strict';
+
 const _ = require('lodash');
 const moment = require('moment');
-const { galaktika } = require('../common/services');
+const { requestPromisse } = require('./async');
 const { RN, DRN } = require('./msg');
 
-// Data
+const cinemaUrls = [
+  'https://1x9zjgzeyd.execute-api.us-east-1.amazonaws.com/prod/kremen/galaktika',
+];
+
+const getCinemaDataByUrl = async (url) => {
+  const { body } = await requestPromisse({ url, json: true });
+  return body;
+}
 
 const getCinemasData = async () => {
-  const galaktikaData = await galaktika.getData();
-  return [galaktikaData]
+  const schedules = [];
+  for(const url of cinemaUrls){
+    try{
+      const data = await getCinemaDataByUrl(url);
+      schedules.push(data);
+    }catch(err){
+      console.error(err);
+    }
+  }
+  return schedules;
 }
 
 const moviesListFromCinemasData = (cinemas) => {
@@ -47,16 +63,16 @@ const cinemaDataToMsg = ({title, website, contacts, schedule}) => {
   const scheduleStr = cinemaScheduleToMsg(schedule);
   let reply = '';
   if(title && website){
-    reply += `[${title}](${website})${DRN}`;
+    reply += `🎥 [${title}](${website})${DRN}`;
   }else if(title){
-    reply += `${title}${DRN}`;
+    reply += `🎥 ${title}${DRN}`;
   }
   reply += `${scheduleStr}${DRN}`;
   if(contacts && contacts.length){
-    reply += `Бронювання квитків:`;
+    reply += `Бронювання квитків:${RN}`;
     contacts.forEach((contact) => {
       if(contact.mobile){
-        reply += `${RN}${contact.mobile}`;
+        reply += `${RN}📱${contact.mobile}`;
       }
     });
   }
@@ -66,7 +82,7 @@ const cinemaDataToMsg = ({title, website, contacts, schedule}) => {
 const cinemaScheduleToMsg = (periods) => {
   let msg = '';
   _.each(periods, (period) => {
-    msg = !msg ? periodToMsg(period) : `${msg}${DRN}${RN}${periodToMsg(period)}`;
+    msg = !msg ? periodToMsg(period) : `${msg}${DRN}${DRN}${periodToMsg(period)}`;
   });
   return msg;
 }
@@ -75,9 +91,9 @@ const periodToMsg = (period) => {
   let msg = '';
   if(period.start && period.end){
     if(isPeriodNow(period.start, period.end)){
-      msg += `*Зараз у кіно*`;
+      msg += `🔥 *Зараз у кіно*`;
     }else{
-      msg += `*${period.start}* - *${period.end}*`;
+      msg += `📅 *${period.start}* - *${period.end}*`;
     }
     msg += DRN;
     msg += hallsToMsg(period.halls);
@@ -96,14 +112,14 @@ const hallsToMsg = (halls) => {
 const hallToMsg = (hall) => {
   let msg = '';
   if(hall.name){
-    msg += `*${hall.name}*`;
+    msg += `🍿 *${hall.name}*`;
     if(hall.places){
       msg += ` *(${hall.places} ${placesDependsOnCount(hall.places)})*`
     }
     msg += `${RN}`;
   }
   _.each(hall.sessions, ({title, format, time, price}) => {
-    msg += `${RN}\`${time}:\``;
+    msg += `${RN}\`🕒 ${time}:\``;
     if(format){
       msg += ` (${format})`;
     }
@@ -116,8 +132,8 @@ const hallToMsg = (hall) => {
 }
 
 const isPeriodNow = (start, end) => {
-  const startTs = moment(start, "DD.M.YYYY").toDate().getTime();
-  const endTs = moment(end, "DD.M.YYYY").toDate().getTime() + 1000 * 60 * 60 * 24;
+  const startTs = moment(start, 'DD.M.YYYY').toDate().getTime();
+  const endTs = moment(end, 'DD.M.YYYY').toDate().getTime() + 1000 * 60 * 60 * 24;
   const nowTs = (new Date()).getTime();
   return (nowTs >= startTs) && (nowTs <= endTs);
 }
@@ -130,8 +146,6 @@ const placesDependsOnCount = (count) => {
   const modCount = count < 100 ? count % 10 : count % 100;
   return placesDependsOnCount(modCount);
 }
-
-// Exports
 
 module.exports = {
   getCinemasData,

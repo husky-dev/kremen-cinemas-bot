@@ -34,7 +34,6 @@ const getNotInGroup = (group) => new Promise((resolve, reject) => {
   ));
 });
 
-// Exports
 module.exports = {
   add,
   addToGroup,

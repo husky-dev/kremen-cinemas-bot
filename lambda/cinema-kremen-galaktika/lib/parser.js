@@ -1,13 +1,25 @@
-// Require
 const _ = require('lodash');
 const iconv = require('iconv-lite');
 const cheerio = require('cheerio');
-const { requestPromisse } = require('../common/async');
-const { erros } = require('../common/consts');
-const log = require('../common/log.js').withModule('parser');
+const request = require('request');
 
 // Consts
 const SCHEDULE_URL = 'http://galaktika-kino.com.ua/main/price.php';
+
+const requestPromisse = (opt) => new Promise((resolve, reject) => {
+  request(opt, (err, res, body) => {
+    if(err){
+      reject(err.toString());
+    }else{
+      if(res.statusCode > 299){
+        const descr = res.statusCode + (body ? ': ' + body : '');
+        reject({code: res.statusCode, name: 'HTTP_WRONG_STATUS_CODE', descr});
+      }else{
+        resolve({res, body});
+      }
+    }
+  });
+});
 
 // Schedule
 
