@@ -3,7 +3,7 @@ version: '2'
 services:
 
   kremen-cinema-bot:
-    image: registry.smartapp.com.ua/pet/kremen-cinema/kremen-cinema-bot:latest
+    image: registry.smartapp.com.ua/iq-hub/kremen-cinema/kremen-cinema-bot:latest
     container_name: 'kremen-cinema-bot'
     hostname: 'kremen-cinema-bot'
     restart: always

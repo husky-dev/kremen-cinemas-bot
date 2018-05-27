@@ -6,7 +6,7 @@ const { requestPromisse } = require('./async');
 const { RN, DRN } = require('./msg');
 
 const cinemaUrls = [
-  'https://1x9zjgzeyd.execute-api.us-east-1.amazonaws.com/prod/kremen/galaktika',
+  'https://api.io.kr.ua/cinema/galaktika',
 ];
 
 const getCinemaDataByUrl = async (url) => {
@@ -119,14 +119,14 @@ const hallToMsg = (hall) => {
     msg += `${RN}`;
   }
   _.each(hall.sessions, ({title, format, time, price}) => {
-    msg += `${RN}\`🕒 ${time}:\``;
+    msg += `${RN}🕒 \`${time}:\``;
     if(format){
       msg += ` (${format})`;
     }
-    msg += ` ${title}`;
     if(price){
-      msg += ` - ${price} грн.`;
+      msg += `(${price})`;
     }
+    msg += ` ${title}`;
   });
   return msg;
 }
