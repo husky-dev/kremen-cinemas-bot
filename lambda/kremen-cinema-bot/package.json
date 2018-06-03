@@ -1,0 +1,14 @@
+{
+  "name": "kremen-cinema-bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "deploy": "bash deploy.sh"
+  },
+  "dependencies": {
+    "lodash": "^4.17.10",
+    "moment": "^2.22.2",
+    "node-telegram-bot-api": "^0.30.0"
+  }
+}
