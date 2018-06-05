@@ -4,11 +4,12 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
+    "start": "npx node-lambda run",
     "deploy": "bash deploy.sh"
   },
   "dependencies": {
     "lodash": "^4.17.10",
     "moment": "^2.22.2",
-    "node-telegram-bot-api": "^0.30.0"
+    "request": "^2.87.0"
   }
 }
