@@ -7,7 +7,7 @@ function mainLog(...args){
   logDebug(...args);
 }
 
-mainLog.err = logDebug;
+mainLog.debug = logDebug;
 mainLog.err = logErr;
 
 module.exports = mainLog;

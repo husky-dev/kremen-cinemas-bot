@@ -2,7 +2,7 @@
 
 const _ = require('lodash');
 const moment = require('moment');
-const { requestPromisse } = require('./async');
+const { asyncReq } = require('./async');
 const { RN, DRN } = require('./msg');
 
 const cinemaUrls = [
@@ -10,7 +10,7 @@ const cinemaUrls = [
 ];
 
 const getCinemaDataByUrl = async (url) => {
-  const { body } = await requestPromisse({ url, json: true });
+  const { body } = await asyncReq({ url, json: true });
   return body;
 }
 

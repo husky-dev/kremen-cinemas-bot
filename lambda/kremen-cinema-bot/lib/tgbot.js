@@ -2,6 +2,12 @@
 
 const { asyncReq } = require('./async');
 
+const strFromCmd = (text) => {
+  const regex = /\/[\w\d_-]+ ([\w\d_-]+)/g;
+  const match = regex.exec(text);
+  return match ? match[1] : null;
+}
+
 const asyncReqData = async (opt) => {
   const { response, body } = await asyncReq(opt);
   const { statusCode } = response;
@@ -25,6 +31,28 @@ class TelegramBot{
     this.token = token;
   }
 
+  static strFromCmd(text){
+    const regex = /\/[\w\d_-]+ ([\w\d_-]+)/g;
+    const match = regex.exec(text);
+    return match ? match[1] : null;
+  }
+
+  // Account
+
+  async getMe(){
+    return this.apiReq({ method: 'getMe' });
+  }
+
+  // Messaging
+
+  async sendMessage(chat_id, text, opt){
+    if(!chat_id) throw new Error('chat_id required');
+    const data = opt ? { chat_id, text, ...opt } : { chat_id, text };
+    return this.apiReq({ method: 'sendMessage', data });
+  }
+
+  // API
+
   async apiReq({ method, data }){
     const url = `https://api.telegram.org/bot${this.token}/${method}`;
     if(!data){
@@ -34,16 +62,6 @@ class TelegramBot{
       'Content-Type': 'application/json',
     };
     return asyncReqData({method: 'POST', url, headers, json: data});
-  }
-
-  async getMe(){
-    return this.apiReq({ method: 'getMe' });
-  }
-
-  async sendMessage(chat_id, text, opt){
-    if(!chat_id) throw new Error('chat_id required');
-    const data = opt ? { chat_id, text, ...opt } : { chat_id, text };
-    return this.apiReq({ method: 'sendMessage', data });
   }
 
 }

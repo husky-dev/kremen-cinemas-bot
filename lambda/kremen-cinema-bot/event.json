@@ -49,6 +49,6 @@
     },
     "apiId": "o7xx11er0i"
   },
-  "body": "{\"update_id\":287236168,\"message\":{\"message_id\":484,\"from\":{\"id\":1801040,\"is_bot\":false,\"first_name\":\"Jaroslav\",\"last_name\":\"Khorishchenko\",\"username\":\"ideveloper\",\"language_code\":\"en-UA\"},\"chat\":{\"id\":1801040,\"first_name\":\"Jaroslav\",\"last_name\":\"Khorishchenko\",\"username\":\"ideveloper\",\"type\":\"private\"},\"date\":1528208865,\"text\":\"hi\"}}",
+  "body": "{\"update_id\":287236168,\"message\":{\"message_id\":484,\"from\":{\"id\":1801040,\"is_bot\":false,\"first_name\":\"Jaroslav\",\"last_name\":\"Khorishchenko\",\"username\":\"ideveloper\",\"language_code\":\"en-UA\"},\"chat\":{\"id\":1801040,\"first_name\":\"Jaroslav\",\"last_name\":\"Khorishchenko\",\"username\":\"ideveloper\",\"type\":\"private\"},\"date\":1528208865,\"text\":\"/schedule\"}}",
   "isBase64Encoded": false
 }

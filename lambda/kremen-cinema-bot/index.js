@@ -10,7 +10,9 @@ if(!TOKEN){
   process.exit(1);
 }
 
-const bot = new Bot(TOKEN);
+const cacheEnabled = (env.CACHE_ENABLED === "false") || (env.CACHE_ENABLED === "0") ? false : true;
+log(cacheEnabled ? 'cache enabled' : 'cache disabled');
+const bot = new Bot(TOKEN, cacheEnabled);
 
 const processReq = async (event, context) => {
   const { httpMethod, body } = event;

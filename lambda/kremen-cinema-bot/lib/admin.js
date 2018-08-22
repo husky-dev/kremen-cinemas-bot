@@ -2,22 +2,22 @@
 
 const { client, projectKey } = require('./redis');
 const rootKey = `${projectKey}:admins`;
-const ACCESS_TOKEN = process.env.KREMEN_CINEMA_BOT_ADMIN;
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
 const log = require('./log');
 
 const isLogined = (chatId) => new Promise((resolve, reject) => {
-  if(!ACCESS_TOKEN) return resolve(false);
+  if(!ADMIN_TOKEN) return resolve(false);
   client.sismember(rootKey, chatId, (err, res) => (
     err ? reject(err) : resolve(res ? true : false)
   ));
 });
 
 const login = (chatId, token) => new Promise((resolve, reject) => {
-  if(!ACCESS_TOKEN){
-    log.warn(`trying to login without KREMEN_CINEMA_BOT_ADMIN provided`);
+  if(!ADMIN_TOKEN){
+    log.warn(`trying to login without ADMIN_TOKEN provided`);
     return resolve(false);
   }
-  if(token !== ACCESS_TOKEN) return resolve(false);
+  if(token !== ADMIN_TOKEN) return resolve(false);
   client.sadd(rootKey, chatId, (err) => (
     err ? reject(err) : resolve(true)
   ));
