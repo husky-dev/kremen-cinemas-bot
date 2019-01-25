@@ -2,7 +2,7 @@ import cheerio from 'cheerio';
 import iconv from 'iconv-lite';
 import { isBuffer, last } from 'lodash';
 import request, { CoreOptions, RequiredUriUrl, Response } from 'request';
-import Log from './log';
+import { Log } from 'utils';
 const SCHEDULE_URL = 'http://galaktika-kino.com.ua/main/price.php';
 const log = Log('parser');
 

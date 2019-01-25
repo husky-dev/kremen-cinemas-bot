@@ -12,7 +12,9 @@
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "paths": {
-      "lib/*": ["./lib/*"]
+      "bot/*": ["./bot/*"],
+      "parsers/*": ["./parsers/*"],
+      "utils/*": ["./utils/*"]
     }
   },
   "exclude": [

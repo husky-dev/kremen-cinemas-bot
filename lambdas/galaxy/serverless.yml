@@ -10,7 +10,7 @@ provider:
 
 functions:
   galaxy:
-    handler: handler.cinemasGalaxy
+    handler: cinemas.galaxy
     events:
       - http:
           method: get

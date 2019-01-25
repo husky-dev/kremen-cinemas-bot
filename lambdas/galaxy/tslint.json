@@ -6,7 +6,10 @@
   "jsRules": {},
   "rules": {
     "quotemark": false,
-    "variable-name": false
+    "variable-name": false,
+    "no-implicit-dependencies": false,
+    "no-submodule-imports": false,
+    "object-literal-sort-keys": false
   },
   "rulesDirectory": []
 }

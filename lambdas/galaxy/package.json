@@ -12,6 +12,8 @@
     "cheerio": "1.0.0-rc.2",
     "iconv-lite": "0.4.24",
     "lodash": "4.17.11",
+    "moment": "2.24.0",
+    "redis": "2.8.0",
     "request": "2.88.0"
   },
   "devDependencies": {
@@ -19,6 +21,7 @@
     "@types/cheerio": "0.22.10",
     "@types/lodash": "4.14.120",
     "@types/node": "^8.0.57",
+    "@types/redis": "2.8.10",
     "@types/request": "2.48.1",
     "serverless-webpack": "^5.1.1",
     "source-map-support": "^0.5.6",
