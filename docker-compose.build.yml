@@ -1,7 +1,0 @@
-version: '2'
-
-services:
-
-  kremen-cinema-bot:
-    image: registry.smartapp.com.ua/iq-hub/kremen-cinema/kremen-cinema-bot:latest
-    build: ./services/kremen-cinema-bot
