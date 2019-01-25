@@ -13,7 +13,7 @@ const getCinemaDataByUrl = async (url: string): Promise<ICinema> => {
   return body;
 };
 
-const getCinemasData = async () => {
+export const getCinemasData = async () => {
   const cinemas: ICinema[] = [];
   for (const url of cinemaUrls) {
     try {
@@ -26,7 +26,7 @@ const getCinemasData = async () => {
   return cinemas;
 };
 
-const moviesListFromCinemasData = (cinemas: ICinema[]): string[] => {
+export const moviesListFromCinemasData = (cinemas: ICinema[]): string[] => {
   const movies: string[] = [];
   cinemas.forEach((cinema) => {
     const { schedule } = cinema;
@@ -49,7 +49,7 @@ const moviesListFromCinemasData = (cinemas: ICinema[]): string[] => {
 
 // Text
 
-const cinemsDataToMsg = (items: ICinema[]) => {
+export const cinemsDataToMsg = (items: ICinema[]) => {
   let msg = '';
   items.forEach((item, index) => {
     const cinemaMsg = cinemaDataToMsg(item);

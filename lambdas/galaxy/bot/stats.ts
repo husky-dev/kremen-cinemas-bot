@@ -6,11 +6,13 @@ import { projectKey, redisClient } from './redis';
 const rootKey = `${projectKey}:stats`;
 const eventsKey = `${rootKey}:events`;
 
-const GET_EVENT = 'get';
-const HELP_EVENT = 'help';
-const START_EVENT = 'start';
-const SUBSCRIBE_EVENT = 'subscribe';
-const UNSUBSCRIBE_EVENT = 'unsubscribe';
+export enum EStatsEvent {
+  Get = 'get',
+  Help = 'help',
+  Start = 'start',
+  Subscribe = 'subscribe',
+  Unsubscribe = 'unsubscribe',
+}
 
 const periodToResolution = (period) => {
   if (period === 'year') { return 'month'; }
@@ -33,11 +35,11 @@ const statsDataToMsg = (start, end, data) => {
   return msg;
 };
 
-const statsMsgForPeriod = async (period) => {
+export const statsMsgForPeriod = async (period) => {
   const end = new Date();
   const start = moment(end).subtract(1, period).toDate();
   const resolution = periodToResolution(period);
-  const data = await getEventStatsForPeriod(GET_EVENT, start, end, resolution);
+  const data = await getEventStatsForPeriod(EStatsEvent.Get, start, end, resolution);
   return statsDataToMsg(start, end, data);
 };
 
@@ -63,7 +65,7 @@ const dateToMonthStr = (d) => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1, 2)}`;
 };
 
-const logEvent = (eventName) => new Promise((resolve, reject) => {
+export const logEvent = (eventName: EStatsEvent) => new Promise((resolve, reject) => {
   const now = new Date();
   const key = eventKeyWithDate(eventName, now);
   redisClient.incr(key, (err, reply) => (
@@ -106,14 +108,3 @@ const getIntVal = (key) => new Promise((resolve, reject) => {
     if (!val) { return resolve(0); } else { return resolve(parseInt(val, 10)); }
   });
 });
-
-export default {
-  GET_EVENT,
-  getEventStatsForPeriod,
-  HELP_EVENT,
-  logEvent,
-  START_EVENT,
-  statsMsgForPeriod,
-  SUBSCRIBE_EVENT,
-  UNSUBSCRIBE_EVENT,
-};

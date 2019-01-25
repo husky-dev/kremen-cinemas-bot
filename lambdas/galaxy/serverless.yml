@@ -15,3 +15,6 @@ functions:
       - http:
           method: get
           path: cinemas/galaxy
+      - http:
+          method: get
+          path: bot/handler
