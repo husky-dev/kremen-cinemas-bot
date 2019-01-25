@@ -1,40 +1,11 @@
 import cheerio from 'cheerio';
+import { ICinema, ICinemaContact, ICinemaHall, ICinemaSession, ISchedulePeriod } from 'common/types';
 import iconv from 'iconv-lite';
 import { isBuffer, last } from 'lodash';
 import request, { CoreOptions, RequiredUriUrl, Response } from 'request';
 import { Log } from 'utils';
 const SCHEDULE_URL = 'http://galaktika-kino.com.ua/main/price.php';
 const log = Log('parser');
-
-interface ICinema {
-  title: string;
-  website: string | null;
-  contacts: ICinemaContact[];
-  schedule: ISchedulePeriod[];
-}
-
-interface ICinemaContact {
-  mobile?: string;
-}
-
-interface ISchedulePeriod {
-  start: string | null;
-  end: string | null;
-  halls: ICinemaHall[];
-}
-
-interface ICinemaHall {
-  name: string | null;
-  places: number | null;
-  sessions: ICinemaSession[];
-}
-
-interface ICinemaSession {
-  title?: string | null;
-  format?: string | null;
-  time?: string | null;
-  price?: number | null;
-}
 
 interface IParsedMoveTitle {
   title: string | null;

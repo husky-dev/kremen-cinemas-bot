@@ -15,6 +15,7 @@ module.exports = {
     extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'],
     alias: {
       bot: path.resolve(__dirname, 'bot/'),
+      common: path.resolve(__dirname, 'common/'),
       parsers: path.resolve(__dirname, 'parsers/'),
       utils: path.resolve(__dirname, 'utils/'),
     },

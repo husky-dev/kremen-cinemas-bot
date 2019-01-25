@@ -12,8 +12,13 @@
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "paths": {
+      "bot": ["./bot"],
       "bot/*": ["./bot/*"],
+      "common": ["./common"],
+      "common/*": ["./common/*"],
+      "parsers": ["./parsers"],
       "parsers/*": ["./parsers/*"],
+      "utils": ["./utils"],
       "utils/*": ["./utils/*"]
     }
   },

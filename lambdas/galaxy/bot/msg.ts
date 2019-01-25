@@ -1,3 +1,4 @@
+// tslint:disable: max-line-length
 export const commandsText = `
 /schedule - розклад сеансів
 /subscribe - підписатись на оновлення
@@ -53,3 +54,4 @@ export const subscribeMsg = `
 export const unsubscribeMsg = `
 Ви відписались від оновлень 😕. Підписку завжди можна відновити виконавши команду /subscribe
 `;
+// tslint:enable: max-line-length
