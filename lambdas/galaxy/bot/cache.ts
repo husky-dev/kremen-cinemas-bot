@@ -5,7 +5,7 @@ const rootKey = `${projectKey}:cache`;
 const log = Log('cache');
 
 export const setCache = async (recKey: string, value, expire): Promise<void> => (
-  new Promise((resolve, reject) => {
+  new Promise<void>((resolve, reject) => {
     const key = `${rootKey}:${recKey}`;
     let data = null;
     try {
@@ -27,7 +27,7 @@ export const setCache = async (recKey: string, value, expire): Promise<void> => 
 );
 
 export const getCache = async (recKey: string): Promise<any> => (
-  new Promise((resolve, reject) => {
+  new Promise<any>((resolve, reject) => {
     const key = `${rootKey}:${recKey}`;
     redisClient.get(key, (err, rawData) => {
       if (err) {

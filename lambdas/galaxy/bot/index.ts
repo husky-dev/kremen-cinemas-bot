@@ -3,7 +3,7 @@ import { adminLogin, adminLogout, getAdminChats, isAdmin } from './admin';
 import { getCache, setCache } from './cache';
 import { addToAllGroup, addToGroup, getNotInGroup, removeFromGroup } from './chatsStore';
 import { cinemsDataToMsg, getCinemasData, moviesListFromCinemasData } from './cinemas';
-import moviesStore from './moviesStore';
+import { addToNotified, filterNotNotified } from './moviesStore';
 import {
  cmdParamErr, helpMsg, loginedMsg, logoutErrMsg, logoutMsg,
   serviceErrMsg, sorryMsg, startMsg, subscribeMsg, unsubscribeMsg, waitMsg,
@@ -214,7 +214,7 @@ export default class CinemaBot {
     log.debug('checking for new movies');
     const cinemasData = await this.getCachedCinemasData();
     const movies = moviesListFromCinemasData(cinemasData);
-    const notNotifiedMovies = await moviesStore.filterNotNotified(movies);
+    const notNotifiedMovies = await filterNotNotified(movies);
     if (notNotifiedMovies.length) {
       let msg = `З'явились нові фільми:${RN}`;
       for (const movie of notNotifiedMovies) {
@@ -225,7 +225,7 @@ export default class CinemaBot {
       for (const adminChat of adminChats) {
         await this.sendMsg(adminChat, msg);
       }
-      await moviesStore.addToNotified(notNotifiedMovies);
+      await addToNotified(notNotifiedMovies);
     } else {
       log.debug('new movies not found');
     }

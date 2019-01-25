@@ -1,4 +1,4 @@
-import { projectKey, redisClient } from './redis';
+import { projectKey, sadd, sdiff, smembers, srem  } from './redis';
 import { TGChatId } from './telegramBot';
 const rootKey = `${projectKey}:chats`;
 
@@ -7,35 +7,17 @@ export const removeFromAllGroup = (chatId: TGChatId) => removeFromGroup(chatId, 
 export const getAllGroup = () => getGroup('all');
 
 export const addToGroup = async (chatId: TGChatId, group: string) => (
-  new Promise((resolve, reject) => {
-    redisClient.sadd(`${rootKey}:${group}`, `${chatId}`, (err) => (
-      err ? reject(err) : resolve()
-    ));
-  })
+  sadd(`${rootKey}:${group}`, `${chatId}`)
 );
 
 export const removeFromGroup = async (chatId: TGChatId, group: string) => (
-  new Promise((resolve, reject) => {
-    redisClient.srem(`${rootKey}:${group}`, `${chatId}`, (err) => (
-      err ? reject(err) : resolve()
-    ));
-  })
+  srem(`${rootKey}:${group}`, `${chatId}`)
 );
 
-export const getGroup = async (group: string): Promise<string[]> => (
-  new Promise((resolve, reject) => {
-    redisClient.smembers(`${rootKey}:${group}`, (err, res) => (
-      err ? reject(err) : resolve(res)
-    ));
-  })
+export const getGroup = async (group: string) => (
+  smembers(`${rootKey}:${group}`)
 );
 
-export const getNotInGroup = async (group: string): Promise<string[]> => (
-  new Promise((resolve, reject) => {
-    const allKey = `${rootKey}:all`;
-    const groupKey = `${rootKey}:${group}`;
-    redisClient.sdiff(allKey, groupKey, (err, res) => (
-      err ? reject(err) : resolve(res)
-    ));
-  })
+export const getNotInGroup = async (group: string) => (
+  sdiff(`${rootKey}:all`, `${rootKey}:${group}`)
 );

@@ -1,26 +1,20 @@
-import { projectKey, redisClient } from './redis';
+import { projectKey, sadd, sismember, srem } from './redis';
 const rootKey = `${projectKey}:movies`;
 
-const addToNotified = (movies) => new Promise((resolve, reject) => {
-  redisClient.sadd(`${rootKey}:notified`, movies, (err) => (
-    err ? reject(err) : resolve()
-  ));
-});
+export const addToNotified = async (movies: string[]) => (
+  sadd(`${rootKey}:notified`, ...movies)
+);
 
-const removeFromNotified = (movies) => new Promise((resolve, reject) => {
-  redisClient.srem(`${rootKey}:notified`, movies, (err) => (
-    err ? reject(err) : resolve()
-  ));
-});
+export const removeFromNotified = async (movies: string) => (
+  srem(`${rootKey}:notified`, movies)
+);
 
-const isNotified = (movies) => new Promise((resolve, reject) => {
-  redisClient.sismember(`${rootKey}:notified`, movies, (err, res) => (
-    err ? reject(err) : resolve(res ? true : false)
-  ));
-});
+export const isNotified = (movies: string) => (
+  sismember(`${rootKey}:notified`, movies)
+);
 
-const filterNotNotified = async (movies) => {
-  const notNotified = [];
+export const filterNotNotified = async (movies: string[]): Promise<string[]> => {
+  const notNotified: string[] = [];
   for (const movie of movies) {
     const isMovieNotified = await isNotified(movie);
     if (!isMovieNotified) {
@@ -28,11 +22,4 @@ const filterNotNotified = async (movies) => {
     }
   }
   return notNotified;
-};
-
-export default {
-  addToNotified,
-  removeFromNotified,
-  isNotified,
-  filterNotNotified,
 };

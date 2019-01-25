@@ -4,11 +4,7 @@ import { Log, okResp } from 'utils';
 const log = Log('handler');
 
 const { env } = process;
-const TOKEN = env.BOT_TOKEN;
-if (!TOKEN) {
-  log.err('Bot token not specified');
-  process.exit(1);
-}
+const TOKEN = '536233288:AAEWievJGXdnU18SVeehwZs9S35iRqRyOic';
 
 const cacheEnabled = (env.CACHE_ENABLED === "false") || (env.CACHE_ENABLED === "0") ? false : true;
 log.debug(cacheEnabled ? 'cache enabled' : 'cache disabled');
