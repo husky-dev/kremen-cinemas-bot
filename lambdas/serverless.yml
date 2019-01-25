@@ -19,6 +19,7 @@ functions:
   bot:
     handler: bot.handler
     environment:
+      NODE_ENV: ${self:provider.stage}
       BOT_TOKEN: ${file(../config.${self:provider.stage}.json):BOT_TOKEN}
       ADMIN_TOKEN: ${file(../config.${self:provider.stage}.json):ADMIN_TOKEN}
       CACHE_ENABLED: ${file(../config.${self:provider.stage}.json):CACHE_ENABLED}

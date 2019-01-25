@@ -2,10 +2,11 @@ import { ICinema, ICinemaHall, ISchedulePeriod } from 'common/types';
 import { each, uniq } from 'lodash';
 import moment from 'moment';
 import { asyncReq, DRN, Log, RN  } from 'utils';
+// const { env: { NODE_ENV } } = process;
 const log = Log('cinemas');
 
 const cinemaUrls = [
-  'https://rpk1zbgoch.execute-api.us-east-1.amazonaws.com/dev/cinemas/galaxy',
+  `https://rpk1zbgoch.execute-api.us-east-1.amazonaws.com/dev/cinemas/galaxy`,
 ];
 
 const getCinemaDataByUrl = async (url: string): Promise<ICinema> => {
