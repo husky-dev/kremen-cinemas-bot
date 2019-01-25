@@ -7,9 +7,7 @@ plugins:
 provider:
   name: aws
   runtime: nodejs8.10
-  environment:
-    BOT_TOKEN: '536233288:AAEWievJGXdnU18SVeehwZs9S35iRqRyOic'
-    CACHE_ENABLED: 'false'
+  stage: ${opt:stage, 'dev'}
 
 functions:
   cinemas:
@@ -20,7 +18,18 @@ functions:
           path: cinemas/galaxy
   bot:
     handler: bot.handler
+    environment:
+      BOT_TOKEN: ${file(../config.${self:provider.stage}.json):BOT_TOKEN}
+      ADMIN_TOKEN: ${file(../config.${self:provider.stage}.json):ADMIN_TOKEN}
+      CACHE_ENABLED: ${file(../config.${self:provider.stage}.json):CACHE_ENABLED}
+      REDIS_HOST: ${file(../config.${self:provider.stage}.json):REDIS_HOST}
+      REDIS_PORT: ${file(../config.${self:provider.stage}.json):REDIS_PORT}
+      REDIS_PASS: ${file(../config.${self:provider.stage}.json):REDIS_PASS}
     events:
+      - http:
+          method: get
+          path: bot/handler
+          cors: true
       - http:
           method: post
           path: bot/handler

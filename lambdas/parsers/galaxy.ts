@@ -45,7 +45,6 @@ const getSchedule = async (): Promise<ISchedulePeriod[]> => {
     if (el.name === 'p') {
       // If it text element - it's can be period info
       const period = parsePeriodFromStr($(el).text());
-      log.trace(period);
       if (period) {
         if (!periods[0].start) {
           // If it's first period - just update it

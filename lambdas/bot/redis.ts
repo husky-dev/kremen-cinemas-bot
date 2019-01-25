@@ -3,11 +3,12 @@ import redis from 'redis';
 import { Log } from 'utils';
 const log = Log('redis');
 export const projectKey = 'cinemas';
+const { env: { REDIS_HOST, REDIS_PORT, REDIS_PASS } } = process;
 
 export const redisClient = redis.createClient({
-  host: 'redis-19865.c16.us-east-1-3.ec2.cloud.redislabs.com',
-  password: 'FjNxx7HZZ7ZpxjuNpWzOUNR9kFiIhizu',
-  port: 19865,
+  host: REDIS_HOST,
+  password: REDIS_PASS,
+  port: parseInt(REDIS_PORT, 10),
 });
 
 // Sets

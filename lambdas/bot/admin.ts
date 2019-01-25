@@ -2,7 +2,7 @@ import { TGChatId } from 'libs/tgbot/index';
 import { Log } from 'utils';
 import { projectKey, sadd, sismember, smembers, srem } from './redis';
 const rootKey = `${projectKey}:admins`;
-const ADMIN_TOKEN = 'k2EF4zNkzYHb5JUHtaK96pZK';
+const { env: { ADMIN_TOKEN } } = process;
 const log = Log('admin');
 
 export const isAdmin = async (chatId: TGChatId) => (
