@@ -1,5 +1,5 @@
+import { TGChatId } from 'libs/tgbot/index';
 import { projectKey, sadd, sdiff, smembers, srem  } from './redis';
-import { TGChatId } from './telegramBot';
 const rootKey = `${projectKey}:chats`;
 
 export const addToAllGroup = (chatId: TGChatId) => addToGroup(chatId, 'all');

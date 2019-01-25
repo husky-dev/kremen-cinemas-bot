@@ -1,3 +1,6 @@
+import TelegramBot, {
+  ITGMessage, ITGSendMessageReducedOpt, ITGUpdate, strFromBotCmd, TGChatId,
+} from 'libs/tgbot/index';
 import { Log,  RN, secondMs } from 'utils';
 import { adminLogin, adminLogout, getAdminChats, isAdmin } from './admin';
 import { getCache, setCache } from './cache';
@@ -5,11 +8,10 @@ import { addToAllGroup, addToGroup, getNotInGroup, removeFromGroup } from './cha
 import { cinemsDataToMsg, getCinemasData, moviesListFromCinemasData } from './cinemas';
 import { addToNotified, filterNotNotified } from './moviesStore';
 import {
- cmdParamErr, helpMsg, loginedMsg, logoutErrMsg, logoutMsg,
+  cmdParamErr, helpMsg, loginedMsg, logoutErrMsg, logoutMsg,
   serviceErrMsg, sorryMsg, startMsg, subscribeMsg, unsubscribeMsg, waitMsg,
 } from './msg';
 import { EStatsEvent, logEvent, statsMsgForPeriod } from './stats';
-import TelegramBot, { ITGMessage, ITGSendMessageReducedOpt, ITGUpdate, strFromBotCmd, TGChatId } from './telegramBot';
 const ReplyWaitTimeout = secondMs;
 const ScheduleCacheKey = 'schedule';
 const ScheduleCacheExp = 60 * 60;
@@ -163,6 +165,7 @@ export default class CinemaBot {
     // Try to get schedule
     try {
       const cinemasData = await this.getCachedCinemasData();
+      log.trace(cinemasData);
       // Reset timeout
       clearTimeout(waitHandler);
       // Reply

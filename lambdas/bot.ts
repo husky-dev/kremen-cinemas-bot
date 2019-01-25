@@ -4,11 +4,15 @@ import { Log, okResp } from 'utils';
 const log = Log('handler');
 
 const { env } = process;
-const TOKEN = '536233288:AAEWievJGXdnU18SVeehwZs9S35iRqRyOic';
+const BOT_TOKEN = env.BOT_TOKEN;
+if (!BOT_TOKEN) {
+  log.err('BOT_TOKEN not defined');
+  process.exit(1);
+}
 
 const cacheEnabled = (env.CACHE_ENABLED === "false") || (env.CACHE_ENABLED === "0") ? false : true;
 log.debug(cacheEnabled ? 'cache enabled' : 'cache disabled');
-const bot = new Bot(TOKEN, cacheEnabled);
+const bot = new Bot(BOT_TOKEN, cacheEnabled);
 
 export const handler: APIGatewayProxyHandler = async (event, _context) => {
   log.debug(event);

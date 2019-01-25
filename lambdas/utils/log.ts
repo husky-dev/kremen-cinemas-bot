@@ -1,4 +1,4 @@
-import { isDate, isNumber, isString, reduce } from 'lodash';
+import { isDate, isError, isNumber, isString, reduce } from 'lodash';
 
 export enum LogLevel {
   Error = 0,
@@ -47,10 +47,14 @@ const logDataItemToStr = (data: any): string => {
   if (data === null) { return 'null'; }
   if (isString(data)) { return data; }
   if (isNumber(data)) { return `${data}`; }
-  if (isDate(data)) { return data.toString(); }
+  if (isDate(data) || isError(data)) { return data.toString(); }
   if (!data) { return ''; }
-  if (data.toString) { return data.toString(); }
-  return '';
+  try {
+    return JSON.stringify(data);
+  } catch (err) {
+    if (data.toString) { return data.toString(); }
+    return '';
+  }
 };
 
 const logDataArrToStr = (data: any[]): string => {
@@ -72,19 +76,20 @@ const Log = (m: string) => {
     emit('log', m, level, data);
     const symbol = levelToSymbol(level);
     const prefix = `[${symbol}][${m}]`;
+    const dataStr = logDataArrToStr(data);
     switch (level) {
     case LogLevel.Debug:
-      return console.log(`${prefix}:`, ...data);
+      return console.log(`${prefix}:`, dataStr);
     case LogLevel.Info:
-      return console.log(`${prefix}:`, ...data);
+      return console.log(`${prefix}:`, dataStr);
     case LogLevel.Warn:
-      return console.log(`${prefix}:`, ...data);
+      return console.log(`${prefix}:`, dataStr);
     case LogLevel.Error:
-      return console.log(`${prefix}:`, ...data);
+      return console.log(`${prefix}:`, dataStr);
     case LogLevel.Trace:
-      return console.log(`${prefix}:`, ...data);
+      return console.log(`${prefix}:`, dataStr);
     default:
-      return console.log(`${prefix}: `, ...data);
+      return console.log(`${prefix}: `, dataStr);
     }
   };
   // tslint:enable:no-console

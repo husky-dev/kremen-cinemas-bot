@@ -16,6 +16,7 @@ module.exports = {
     alias: {
       bot: path.resolve(__dirname, 'bot/'),
       common: path.resolve(__dirname, 'common/'),
+      libs: path.resolve(__dirname, 'libs/'),
       parsers: path.resolve(__dirname, 'parsers/'),
       utils: path.resolve(__dirname, 'utils/'),
     },

@@ -7,9 +7,12 @@ plugins:
 provider:
   name: aws
   runtime: nodejs8.10
+  environment:
+    BOT_TOKEN: '536233288:AAEWievJGXdnU18SVeehwZs9S35iRqRyOic'
+    CACHE_ENABLED: 'false'
 
 functions:
-  galaxy:
+  cinemas:
     handler: cinemas.galaxy
     events:
       - http:
@@ -19,5 +22,6 @@ functions:
     handler: bot.handler
     events:
       - http:
-          method: get
+          method: post
           path: bot/handler
+          cors: true

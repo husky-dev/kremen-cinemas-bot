@@ -2,8 +2,7 @@ import cheerio from 'cheerio';
 import { ICinema, ICinemaContact, ICinemaHall, ICinemaSession, ISchedulePeriod } from 'common/types';
 import iconv from 'iconv-lite';
 import { isBuffer, last } from 'lodash';
-import request, { CoreOptions, RequiredUriUrl, Response } from 'request';
-import { Log } from 'utils';
+import { asyncReq, Log } from 'utils';
 const SCHEDULE_URL = 'http://galaktika-kino.com.ua/main/price.php';
 const log = Log('parser');
 
@@ -46,10 +45,11 @@ const getSchedule = async (): Promise<ISchedulePeriod[]> => {
     if (el.name === 'p') {
       // If it text element - it's can be period info
       const period = parsePeriodFromStr($(el).text());
+      log.trace(period);
       if (period) {
         if (!periods[0].start) {
           // If it's first period - just update it
-          periods[0] = {...period, ...periods[0]};
+          periods[0] = {...periods[0], ...period};
         } else {
           // Else - create new one
           periods.push({...period, halls: []});
@@ -69,9 +69,7 @@ const getSchedule = async (): Promise<ISchedulePeriod[]> => {
 };
 
 const parsePeriodFromStr = (str: string): IParsedPeriod | null => {
-  if (!str) {
-    return null;
-  }
+  if (!str) { return null; }
   const periodReg = /(\d+\.\d+\.\d+).+?(\d+\.\d+\.\d+)/g;
   const periodMatch = periodReg.exec(str);
   if (!periodMatch) {
@@ -191,7 +189,7 @@ const parseMoviePrice = (price: string = ''): number | null => {
 
 const  getHtml = async (url: string): Promise<string> => {
   const reqOpt = { url, encoding: null };
-  let { body } = await requestPromisse(reqOpt);
+  let { body } = await asyncReq(reqOpt);
   // Converting
   const encodingFromBody = getEncodingFromHtml(body.toString());
   if (encodingFromBody) {
@@ -215,20 +213,3 @@ const getEncodingFromHtml = (body: string): string | null => {
   if (encodingStr === 'windows-1251') { return 'cp1251'; }
   return encodingStr;
 };
-
-const requestPromisse = (opt: RequiredUriUrl & CoreOptions): Promise<{res: Response, body: any}> => (
-  new Promise((resolve, reject) => {
-    request(opt, (err: any, res: Response, body: any) => {
-      if (err) {
-        reject({name: 'HTTP_REQ_ERR', descr: err.toString()});
-      } else {
-        if (res.statusCode > 299) {
-          const descr = res.statusCode + (body ? ': ' + body : '');
-          reject({code: res.statusCode, name: 'HTTP_WRONG_STATUS_CODE', descr});
-        } else {
-          resolve({res, body});
-        }
-      }
-    });
-  })
-);

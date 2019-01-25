@@ -6,7 +6,7 @@ export const projectKey = 'cinemas';
 
 export const redisClient = redis.createClient({
   host: 'redis-19865.c16.us-east-1-3.ec2.cloud.redislabs.com',
-  password: 'REDISFjNxx7HZZ7ZpxjuNpWzOUNR9kFiIhizu_PASS',
+  password: 'FjNxx7HZZ7ZpxjuNpWzOUNR9kFiIhizu',
   port: 19865,
 });
 
