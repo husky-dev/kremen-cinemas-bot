@@ -1,12 +1,12 @@
 import TelegramBot, {
   ITGMessage, ITGSendMessageReducedOpt, ITGUpdate, strFromBotCmd, TGChatId,
 } from 'libs/tgbot/index';
-import { Log,  RN, secondMs } from 'utils';
-import { adminLogin, adminLogout, getAdminChats, isAdmin } from './admin';
+import { Log, secondMs } from 'utils';
+import { adminLogin, adminLogout, isAdmin } from './admin';
 import { getCache, setCache } from './cache';
 import { addToAllGroup, addToGroup, getNotInGroup, removeFromGroup } from './chatsStore';
 import { cinemsDataToMsg, getCinemasData, moviesListFromCinemasData } from './cinemas';
-import { addToNotified, filterNotNotified } from './moviesStore';
+import { addToNotifiedMovies, filterNotNotifiedMovies } from './moviesStore';
 import {
   cmdParamErr, helpMsg, loginedMsg, logoutErrMsg, logoutMsg,
   serviceErrMsg, sorryMsg, startMsg, subscribeMsg, unsubscribeMsg, waitMsg,
@@ -35,42 +35,11 @@ export default class CinemaBot {
 
   public async processUpdate(data: ITGUpdate) {
     log.debug('processing update: ', data);
-    // const editedMessage = update.edited_message;
-    // const channelPost = update.channel_post;
-    // const editedChannelPost = update.edited_channel_post;
-    // const inlineQuery = update.inline_query;
-    // const chosenInlineResult = update.chosen_inline_result;
-    // const callbackQuery = update.callback_query;
-    // const shippingQuery = update.shipping_query;
-    // const preCheckoutQuery = update.pre_checkout_query;
     if (data.message) {
       await this.processTextMsg(data.message);
     }
   }
 
-  /* {
-    "update_id": 287236163,
-    "message": {
-      "message_id": 479,
-      "from": {
-        "id": 1801040,
-        "is_bot": false,
-        "first_name": "Jaroslav",
-        "last_name": "Khorishchenko",
-        "username": "ideveloper",
-        "language_code": "en-UA"
-      },
-      "chat": {
-        "id": 1801040,
-        "first_name": "Jaroslav",
-        "last_name": "Khorishchenko",
-        "username": "ideveloper",
-        "type": "private"
-      },
-      "date": 1528208016,
-      "text": "hi"
-    }
-  } */
   public async processTextMsg(message: ITGMessage) {
     log.debug('message received: ', message);
     const chatId = message.chat.id;
@@ -207,7 +176,11 @@ export default class CinemaBot {
     const subscrChats = await getNotInGroup(UnsubscribeGroup);
     log.debug(`sending notification with text: "${msg}", users: ${subscrChats.length}`);
     for (const subscrChatId of subscrChats) {
-      await this.sendMsg(subscrChatId, msg, {parse_mode: 'Markdown'});
+      try {
+        await this.sendMsg(subscrChatId, msg, {parse_mode: 'Markdown'});
+      } catch (err) {
+        log.err(err);
+      }
     }
   }
 
@@ -217,18 +190,15 @@ export default class CinemaBot {
     log.debug('checking for new movies');
     const cinemasData = await this.getCachedCinemasData();
     const movies = moviesListFromCinemasData(cinemasData);
-    const notNotifiedMovies = await filterNotNotified(movies);
+    const notNotifiedMovies = await filterNotNotifiedMovies(movies);
     if (notNotifiedMovies.length) {
-      let msg = `З'явились нові фільми:${RN}`;
+      let msg = ``;
       for (const movie of notNotifiedMovies) {
-        msg += `${RN}- ${movie}`;
+        msg +=  !msg ? `"${movie}"` : `, "${movie}"`;
       }
-      const adminChats = await getAdminChats();
-      log.debug(`sending information about new movies to ${adminChats.length} admins`);
-      for (const adminChat of adminChats) {
-        await this.sendMsg(adminChat, msg);
-      }
-      await addToNotified(notNotifiedMovies);
+      msg = `🔥${msg} вже у кіно! Переглянути розклад: /schedule`;
+      await this.notifySubscrUsersWithMsg(msg);
+      await addToNotifiedMovies(notNotifiedMovies);
     } else {
       log.debug('new movies not found');
     }

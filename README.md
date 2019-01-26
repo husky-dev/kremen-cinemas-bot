@@ -2,7 +2,7 @@
 
 ## Init
 
-Create `config.dev.json` and `config.prod.json` with fromat:
+Create `config.dev.json` and `config.prod.json` with configs:
 
 ```json
 {

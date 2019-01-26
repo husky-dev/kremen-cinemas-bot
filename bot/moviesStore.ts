@@ -1,19 +1,11 @@
-import { projectKey, sadd, sismember, srem } from './redis';
+import { projectKey, sadd, sismember } from './redis';
 const rootKey = `${projectKey}:movies`;
 
-export const addToNotified = async (movies: string[]) => (
+export const addToNotifiedMovies = async (movies: string[]) => (
   sadd(`${rootKey}:notified`, ...movies)
 );
 
-export const removeFromNotified = async (movies: string) => (
-  srem(`${rootKey}:notified`, movies)
-);
-
-export const isNotified = (movies: string) => (
-  sismember(`${rootKey}:notified`, movies)
-);
-
-export const filterNotNotified = async (movies: string[]): Promise<string[]> => {
+export const filterNotNotifiedMovies = async (movies: string[]): Promise<string[]> => {
   const notNotified: string[] = [];
   for (const movie of movies) {
     const isMovieNotified = await isNotified(movie);
@@ -23,3 +15,7 @@ export const filterNotNotified = async (movies: string[]): Promise<string[]> => 
   }
   return notNotified;
 };
+
+const isNotified = (movies: string) => (
+  sismember(`${rootKey}:notified`, movies)
+);

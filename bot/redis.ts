@@ -1,4 +1,3 @@
-
 import redis from 'redis';
 import { Log } from 'utils';
 const log = Log('redis');

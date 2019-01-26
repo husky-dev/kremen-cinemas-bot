@@ -25,5 +25,9 @@ export const handler: APIGatewayProxyHandler = async (event, _context) => {
   if (httpMethod === 'GET') {
     log.debug('GET request, ignoring');
   }
+  if ((event as any).action === 'checkForNew') {
+    log.info('checkForNew action');
+    await bot.onCheckForNewMovies();
+  }
   return okResp();
 };
