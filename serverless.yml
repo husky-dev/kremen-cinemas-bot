@@ -16,13 +16,13 @@ provider:
 
 functions:
   cinemas:
-    handler: cinemas.galaxy
+    handler: handlersCinemas.galaxy
     events:
       - http:
           method: get
           path: cinemas/galaxy
   bot:
-    handler: bot.handler
+    handler: handlersBot.handler
     environment:
       NODE_ENV: ${self:provider.stage}
       BOT_TOKEN: ${file(config.${self:provider.stage}.json):BOT_TOKEN}
