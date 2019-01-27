@@ -6,7 +6,7 @@ import { asyncReq, DRN, Log, RN  } from 'utils';
 const log = Log('cinemas');
 
 const cinemaUrls = [
-  `https://jyo347b7ql.execute-api.us-east-1.amazonaws.com/prod/cinemas/galaxy`,
+  `https://68j5kacxr1.execute-api.us-east-1.amazonaws.com/prod/cinemas/galaxy`,
 ];
 
 const getCinemaDataByUrl = async (url: string): Promise<ICinema> => {

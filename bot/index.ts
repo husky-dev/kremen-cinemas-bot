@@ -1,6 +1,7 @@
 import TelegramBot, {
   ITGMessage, ITGSendMessageReducedOpt, ITGUpdate, strFromBotCmd, TGChatId,
 } from 'libs/tgbot/index';
+import { isArray } from 'lodash';
 import { Log, secondMs } from 'utils';
 import { adminLogin, adminLogout, isAdmin } from './admin';
 import { getCache, setCache } from './cache';
@@ -218,7 +219,7 @@ export default class CinemaBot {
       return getCinemasData();
     }
     const cachedData = await getCache(ScheduleCacheKey);
-    if (cachedData) {
+    if (cachedData && isArray(cachedData) && cachedData.length) {
       log.debug(`loading cinemas data from cache`);
       return cachedData;
     }
