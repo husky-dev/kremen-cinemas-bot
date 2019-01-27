@@ -22,8 +22,3 @@ Where:
 - `CACHE_ENABLED` - enable/dissable redis cache
 - `REDIS_HOST / REDIS_PORT / REDIS_PASS` - redis credentials
 - `ADMIN_TOKEN` - randomly generated string for auth in system
-
-## TODO
-
-- Call lamda directly
-- Log level

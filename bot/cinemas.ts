@@ -1,24 +1,56 @@
+import aws, { Lambda } from 'aws-sdk';
 import { ICinema, ICinemaHall, ISchedulePeriod } from 'common/types';
-import { each, uniq } from 'lodash';
+import { each, isString, uniq } from 'lodash';
 import moment from 'moment';
-import { asyncReq, DRN, Log, RN  } from 'utils';
-// const { env: { NODE_ENV } } = process;
+import { DRN, Log, RN  } from 'utils';
 const log = Log('cinemas');
+const {env: {NODE_ENV}} = process;
 
-const cinemaUrls = [
-  `https://68j5kacxr1.execute-api.us-east-1.amazonaws.com/prod/cinemas/galaxy`,
+const cinemaDataProviders = [
+  `kremen-cinema-${NODE_ENV}-cinemas`,
 ];
 
-const getCinemaDataByUrl = async (url: string): Promise<ICinema> => {
-  const { body } = await asyncReq({ url, json: true });
-  return body;
+const lambda = new aws.Lambda({ region: 'us-east-1' });
+
+const invokeLambda = async (params: Lambda.Types.InvocationRequest) => (
+  new Promise<Lambda.Types.InvocationResponse>((resolve, reject) => (
+    lambda.invoke(params, (err, data) => err ? reject(err) : resolve(data))
+  ))
+);
+
+const getDataFromLambda =  async (params: Lambda.Types.InvocationRequest) => {
+  const { StatusCode, Payload } = await invokeLambda(params);
+  if (StatusCode !== 200) { throw new Error(`Wrong lambda response status code: ${StatusCode}`); }
+  if (!isString(Payload)) { throw new Error(`Wrong lambda response payload format`); }
+  try {
+    return JSON.parse(Payload);
+  } catch (err) {
+    throw new Error('Parsing lamda payload err');
+  }
+};
+
+const getDataBodyFromLambda = async (params: Lambda.Types.InvocationRequest) => {
+  const resp = await getDataFromLambda(params);
+  if (!resp) { throw new Error('Lambda response is empty'); }
+  if (!resp.body) { throw new Error('Lambda response resp.body is empty'); }
+  if (!isString(resp.body)) { throw new Error('Lambda response resp.body is not a string'); }
+  try {
+    return JSON.parse(resp.body);
+  } catch (err) {
+    throw new Error('Parsing lamda resp.body err');
+  }
+};
+
+const getCinemaDataFromProvider = async (FunctionName: string): Promise<ICinema> => {
+  log.debug(`get cinema data from provider: ${FunctionName}`);
+  return getDataBodyFromLambda({ FunctionName });
 };
 
 export const getCinemasData = async () => {
   const cinemas: ICinema[] = [];
-  for (const url of cinemaUrls) {
+  for (const provider of cinemaDataProviders) {
     try {
-      const data = await getCinemaDataByUrl(url);
+      const data = await getCinemaDataFromProvider(provider);
       cinemas.push(data);
     } catch (err) {
       log.err(err);
