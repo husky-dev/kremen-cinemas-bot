@@ -22,3 +22,13 @@ Where:
 - `CACHE_ENABLED` - enable/dissable redis cache
 - `REDIS_HOST / REDIS_PORT / REDIS_PASS` - redis credentials
 - `ADMIN_TOKEN` - randomly generated string for auth in system
+
+## Webhook
+
+Set new webhook:
+
+```
+BOT_TOKEN=token && \
+BOT_WEBHOOK=webhook && \
+curl "https://api.telegram.org/bot$BOT_TOKEN/setWebhook?url=$BOT_WEBHOOK"
+```
