@@ -1,13 +1,26 @@
 import redis from 'redis';
 import { Log } from 'utils';
 const log = Log('redis');
-export const projectKey = 'cinemas';
-const { env: { REDIS_HOST, REDIS_PORT, REDIS_PASS } } = process;
+const { env: { REDIS_HOST, REDIS_PORT, REDIS_PASS, NODE_ENV } } = process;
+export const projectKey = `cinemas:${NODE_ENV}`;
 
 export const redisClient = redis.createClient({
   host: REDIS_HOST,
   password: REDIS_PASS,
   port: parseInt(REDIS_PORT, 10),
+  retry_strategy: (options) => {
+    if (options.error && options.error.code === 'ECONNREFUSED') {
+        return new Error('The server refused the connection');
+    }
+    if (options.total_retry_time > 10 * 60 * 60) {
+        return new Error('Retry time exhausted');
+    }
+    if (options.attempt > 10) {
+        return undefined;
+    }
+    // reconnect after
+    return Math.min(options.attempt * 100, 3000);
+  },
 });
 
 // Sets

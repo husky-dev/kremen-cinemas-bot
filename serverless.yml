@@ -23,6 +23,7 @@ functions:
           path: cinemas/galaxy
   bot:
     handler: handlersBot.handler
+    timeout: 10
     environment:
       NODE_ENV: ${self:provider.stage}
       BOT_TOKEN: ${file(config.${self:provider.stage}.json):BOT_TOKEN}
