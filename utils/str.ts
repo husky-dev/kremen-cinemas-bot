@@ -1,7 +1,8 @@
 import { isError, isFunction, isNumber, isString } from 'lodash';
 
 export const RN = '\r\n';
-export const DRN = `${RN}${RN}`;
+export const RN2 = `${RN}${RN}`;
+export const RN3 = `${RN}${RN}${RN}`;
 
 export const errToStr = (err: any) => {
   if (!err) { return 'Error: empty error'; }

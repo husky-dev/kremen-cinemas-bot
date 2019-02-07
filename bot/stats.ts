@@ -1,6 +1,6 @@
 import { each, isDate } from 'lodash';
 import moment from 'moment';
-import { DRN, hourMs, pad, RN } from 'utils';
+import { RN2, hourMs, pad, RN } from 'utils';
 import { projectKey, redisClient } from './redis';
 
 const rootKey = `${projectKey}:stats`;
@@ -25,7 +25,7 @@ const periodToResolution = (period) => {
 const statsDataToMsg = (start, end, data) => {
   const startStr = moment(start).format('YYYY-MM-DD');
   const endStr = moment(end).format('YYYY-MM-DD');
-  let msg = `*${startStr}* - *${endStr}*${DRN}`;
+  let msg = `*${startStr}* - *${endStr}*${RN2}`;
   let total = 0;
   each(data, (val, key) => {
     total += val;

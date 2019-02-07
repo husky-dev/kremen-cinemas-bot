@@ -1,29 +1,23 @@
-export interface ICinema {
+export interface ICinemaSession {
+  time: string;
+  hall?: string;
+  format: string;
+  price: number;
+}
+
+export interface ICinemaMovie {
   title: string;
-  website: string | null;
-  contacts: ICinemaContact[];
-  schedule: ISchedulePeriod[];
-}
-
-export interface ICinemaContact {
-  mobile?: string;
-}
-
-export interface ISchedulePeriod {
-  start: string | null;
-  end: string | null;
-  halls: ICinemaHall[];
-}
-
-export interface ICinemaHall {
-  name: string | null;
-  places: number | null;
+  descr?: string;
   sessions: ICinemaSession[];
 }
 
-export interface ICinemaSession {
-  title?: string | null;
-  format?: string | null;
-  time?: string | null;
-  price?: number | null;
+export interface IContact {
+  mobile?: string;
+}
+
+export interface ICinema {
+  title: string;
+  website: string | null;
+  contacts: IContact[];
+  movies: ICinemaMovie[];
 }

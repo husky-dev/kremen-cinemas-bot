@@ -1,10 +1,29 @@
 import cheerio from 'cheerio';
-import { ICinema, ICinemaContact, ICinemaHall, ICinemaSession, ISchedulePeriod } from 'common/types';
+import { ICinema, ICinemaMovie, ICinemaSession, IContact } from 'common/types';
 import iconv from 'iconv-lite';
 import { isBuffer, last } from 'lodash';
 import { asyncReq, Log } from 'utils';
 const SCHEDULE_URL = 'http://galaktika-kino.com.ua/main/price.php';
 const log = Log('parser');
+
+interface IGalaxySession {
+  title?: string;
+  format?: string;
+  time?: string;
+  price?: number;
+}
+
+interface IGalaxyHall {
+  name: string | null;
+  places: number | null;
+  sessions: IGalaxySession[];
+}
+
+interface IGalaxyPeriod {
+  start: string | null;
+  end: string | null;
+  halls: IGalaxyHall[];
+}
 
 interface IParsedMoveTitle {
   title: string | null;
@@ -24,23 +43,49 @@ interface IParsedPeriod {
 // Cinema
 
 export const getCinema = async (): Promise<ICinema> => {
-  const title = 'Кінотеатр "Галактика"';
+  const title = 'Галактика';
   const website = "http://galaktika-kino.com.ua/";
-  const contacts: ICinemaContact[] = [
+  const contacts: IContact[] = [
     { mobile: "+38 (067) 534-4-534" },
   ];
   const schedule = await getSchedule();
-  return { title, website, contacts, schedule };
+  const movies = scheduleToMovies(schedule);
+  return { title, website, contacts, movies };
+};
+
+const scheduleToMovies = (schedule: IGalaxyPeriod[]): ICinemaMovie[] => {
+  const res: ICinemaMovie[] = [];
+  for (const period of schedule) {
+    const { halls } = period;
+    for (const hall of halls) {
+      const { sessions, name: hallName } = hall;
+      for (const session of sessions) {
+        const { title, format = '2d', time = '00:00', price = 0 } = session;
+        if (title) {
+          const sessionData: ICinemaSession = {
+            format, time, price, hall: hallName,
+          };
+          const exMovie = res.find((item) => item.title === title);
+          if (exMovie) {
+            exMovie.sessions.push(sessionData);
+          } else {
+            res.push({ title, sessions: [ sessionData ] });
+          }
+        }
+      }
+    }
+  }
+  return res;
 };
 
 // Schedule
 
-const getSchedule = async (): Promise<ISchedulePeriod[]> => {
+const getSchedule = async (): Promise<IGalaxyPeriod[]> => {
   const html = await getHtml(SCHEDULE_URL);
   const $ = cheerio.load(html, { decodeEntities: false });
   const content = $('#opis');
   // Periods
-  const periods: ISchedulePeriod[] = [{start: null, end: null, halls: []}];
+  const periods: IGalaxyPeriod[] = [{start: null, end: null, halls: []}];
   content.children().each((_index, el) => {
     if (el.name === 'p') {
       // If it text element - it's can be period info
@@ -76,7 +121,7 @@ const parsePeriodFromStr = (str: string): IParsedPeriod | null => {
   } else { return { start: periodMatch[1], end: periodMatch[2] }; }
 };
 
-const parseHallTable = ($: CheerioStatic, table: CheerioElement): ICinemaHall => {
+const parseHallTable = ($: CheerioStatic, table: CheerioElement): IGalaxyHall => {
   const info = parseHallInfo($, table);
   const sessions = parseHallSessions($, table);
   return { ...info, sessions };
@@ -100,8 +145,8 @@ const parseHallInfo = ($: CheerioStatic, table: CheerioElement): IParsedHallInfo
   return data;
 };
 
-const parseHallSessions = ($: CheerioStatic, table: CheerioElement): ICinemaSession[] => {
-  const sessions: ICinemaSession[] = [];
+const parseHallSessions = ($: CheerioStatic, table: CheerioElement): IGalaxySession[] => {
+  const sessions: IGalaxySession[] = [];
   $('tr', table).each((index, row) => {
     // Passing first fields
     if (index <= 1) { return; }
@@ -112,8 +157,8 @@ const parseHallSessions = ($: CheerioStatic, table: CheerioElement): ICinemaSess
   return sessions;
 };
 
-const parseHallSessionTableRow = ($: CheerioStatic, row: CheerioElement): ICinemaSession => {
-  const data: ICinemaSession = {};
+const parseHallSessionTableRow = ($: CheerioStatic, row: CheerioElement): IGalaxySession => {
+  const data: IGalaxySession = {};
   $('td', row).each((index, el) => {
     if (index === 0) {
       const { title, format } = parseMovieTitle($(el).text().trim());
@@ -137,20 +182,17 @@ const parseMovieTitle = (title: string = ''): IParsedMoveTitle => {
     return { title: null, format: null };
   }
   // Usual
-  const usualReg = /"([\s\S]+?)"\s+([\d]D)/g;
-  const usualMatch = usualReg.exec(title);
+  const usualMatch = /"([\s\S]+?)"\s+([\d]D)/g.exec(title);
   if (usualMatch) {
-    return {title: usualMatch[1], format: usualMatch[2]};
+    return { title: usualMatch[1], format: usualMatch[2] };
   }
   // Without starting
-  const withoutStartReg = /([\s\S]+?)"\s+([\d]D)/g;
-  const withoutStartMatch = withoutStartReg.exec(title);
+  const withoutStartMatch = /([\s\S]+?)"\s+([\d]D)/g.exec(title);
   if (withoutStartMatch) {
     return {title: withoutStartMatch[1], format: withoutStartMatch[2]};
   }
   // Without format
-  const withoutFormatReg = /"([\s\S]+?)"/g;
-  const withoutFormatMatch = withoutFormatReg.exec(title);
+  const withoutFormatMatch = /"([\s\S]+?)"/g.exec(title);
   if (withoutFormatMatch) {
     return {title: withoutFormatMatch[1], format: null};
   }
