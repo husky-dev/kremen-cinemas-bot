@@ -3,7 +3,7 @@ import TelegramBot, {
 } from 'lib/tgbot';
 import { isArray } from 'lodash';
 import { getCache, setCache } from 'services/cache';
-import { Log, secondMs } from 'utils';
+import { Log } from 'utils';
 import { adminLogin, adminLogout, isAdmin } from './admin';
 import { addToAllGroup, addToGroup, getNotInGroup, removeFromGroup } from './chatsStore';
 import { cinemsDataToMsg, getCinemasData, moviesListFromCinemasData } from './cinemas';
@@ -74,7 +74,7 @@ export default class CinemaBot {
         await this.sendMsg(chatId, sorryMsg);
       }
     } catch (err) {
-      log.err(err);
+      log.err('process text msg err, err=', err);
       await this.sendMsg(chatId, serviceErrMsg);
     }
   }
@@ -97,30 +97,20 @@ export default class CinemaBot {
   }
 
   public async onStatsCmd(chatId: TGChatId, text: string) {
-   try {
-    if (!await isAdmin(chatId)) { return await this.sendMsg(chatId, sorryMsg); }
-    const period = strFromBotCmd(text) || 'week';
-    if (['day', 'week', 'month', 'year'].indexOf(period) === -1) {
-      return await this.sendMsg(chatId, cmdParamErr);
-    }
-    const msg = await statsMsgForPeriod(period);
-    await this.sendMsg(chatId, msg, { parse_mode: 'Markdown' });
-   } catch (e) {
-     log.err(e);
-     await this.sendMsg(chatId, serviceErrMsg);
-   }
+  if (!await isAdmin(chatId)) { return this.sendMsg(chatId, sorryMsg); }
+  const period = strFromBotCmd(text) || 'week';
+  if (['day', 'week', 'month', 'year'].indexOf(period) === -1) {
+    return this.sendMsg(chatId, cmdParamErr);
+  }
+  const msg = await statsMsgForPeriod(period);
+  await this.sendMsg(chatId, msg, { parse_mode: 'Markdown' });
   }
 
   public async onLogoutCmd(chatId: TGChatId) {
-    try {
-      if (!await isAdmin(chatId)) { return await this.sendMsg(chatId, sorryMsg); }
-      const isLogouted = await adminLogout(chatId);
-      if (!isLogouted) { return await this.sendMsg(chatId, logoutErrMsg); }
-      await this.sendMsg(chatId, logoutMsg);
-     } catch (e) {
-       log.err(e);
-       await this.sendMsg(chatId, serviceErrMsg);
-     }
+    if (!await isAdmin(chatId)) { return this.sendMsg(chatId, sorryMsg); }
+    const isLogouted = await adminLogout(chatId);
+    if (!isLogouted) { return this.sendMsg(chatId, logoutErrMsg); }
+    await this.sendMsg(chatId, logoutMsg);
   }
 
   public async onHelpCmd(chatId: TGChatId) {
@@ -128,18 +118,10 @@ export default class CinemaBot {
   }
 
   public async onScheduleCmd(chatId: TGChatId) {
-    // Try to get schedule
-    try {
-      const cinemasData = await this.getCachedCinemasData();
-      log.trace(cinemasData);
-      // Reply
-      const cinemasMsg = cinemsDataToMsg(cinemasData);
-      await this.sendMsg(chatId, cinemasMsg, { parse_mode: 'Markdown', disable_web_page_preview: true });
-    } catch (err) {
-      // Log problems
-      log.err(err);
-      await this.sendMsg(chatId, serviceErrMsg);
-    }
+    const cinemasData = await this.getCachedCinemasData();
+    log.trace(cinemasData);
+    const cinemasMsg = cinemsDataToMsg(cinemasData);
+    await this.sendMsg(chatId, cinemasMsg, { parse_mode: 'Markdown', disable_web_page_preview: true });
   }
 
   // Subscriptions
@@ -155,14 +137,9 @@ export default class CinemaBot {
   }
 
   public async onNotifyCmd(chatId: TGChatId, text: string) {
-    try {
-      if (!await isAdmin(chatId)) { return await this.sendMsg(chatId, sorryMsg); }
-      const msg = text.replace('/notify', '').trim();
-      await this.notifySubscrUsersWithMsg(msg);
-     } catch (e) {
-       log.err(e);
-       await this.sendMsg(chatId, serviceErrMsg);
-     }
+    if (!await isAdmin(chatId)) { return this.sendMsg(chatId, sorryMsg); }
+    const msg = text.replace('/notify', '').trim();
+    await this.notifySubscrUsersWithMsg(msg);
   }
 
   public async notifySubscrUsersWithMsg(msg: string) {
