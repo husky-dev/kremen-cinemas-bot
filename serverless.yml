@@ -15,14 +15,8 @@ provider:
         - lambda:*
 
 functions:
-  cinemas:
-    handler: handlersCinemas.galaxy
-    events:
-      - http:
-          method: get
-          path: cinemas/galaxy
   bot:
-    handler: handlersBot.handler
+    handler: handlerBot.handler
     timeout: 10
     environment:
       NODE_ENV: ${self:provider.stage}

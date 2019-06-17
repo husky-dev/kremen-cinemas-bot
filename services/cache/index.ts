@@ -1,6 +1,6 @@
 import { isNumber } from 'lodash';
+import { projectKey, redisClient } from 'services/redis';
 import { Log } from 'utils';
-import { projectKey, redisClient } from './redis';
 const rootKey = `${projectKey}:cache`;
 const log = Log('cache');
 

@@ -1,6 +1,6 @@
-import { TGChatId } from 'libs/tgbot/index';
+import { TGChatId } from 'lib/tgbot';
+import { projectKey, sadd, sismember, smembers, srem } from 'services/redis';
 import { Log } from 'utils';
-import { projectKey, sadd, sismember, smembers, srem } from './redis';
 const rootKey = `${projectKey}:admins`;
 const { env: { ADMIN_TOKEN } } = process;
 const log = Log('admin');

@@ -1,7 +1,7 @@
 import { each, isDate } from 'lodash';
 import moment from 'moment';
-import { RN2, hourMs, pad, RN } from 'utils';
-import { projectKey, redisClient } from './redis';
+import { projectKey, redisClient } from 'services/redis';
+import { hourMs, pad, RN, RN2 } from 'utils';
 
 const rootKey = `${projectKey}:stats`;
 const eventsKey = `${rootKey}:events`;

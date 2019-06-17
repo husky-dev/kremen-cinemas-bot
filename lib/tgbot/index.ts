@@ -1,29 +1,9 @@
-import request, { CoreOptions, Response, UriOptions, UrlOptions } from 'request';
+import { asyncReq } from 'utils';
 import { ITGSendMessageOpt, ITGSendMessageReducedOpt } from './types';
 
-type ReqOpt = (UriOptions & CoreOptions) | (UrlOptions & CoreOptions);
-
-export const asyncReq = (opt: ReqOpt): Promise<{ res: Response, body: any }> => (
-  new Promise((resolve, reject) => {
-    request(opt, (err, res, body) => {
-      if (err) {
-        reject({name: 'HTTP_REQ_ERR', descr: err.toString()});
-      } else {
-        if (res.statusCode > 299) {
-          const name = 'HTTP_WRONG_STATUS_CODE';
-          const descr = res.statusCode + (body ? ': ' + body : '');
-          reject({ code: res.statusCode, name, descr });
-        } else {
-          resolve({ res, body });
-        }
-      }
-    });
-  })
-);
-
 const asyncReqData = async (opt) => {
-  const { res, body } = await asyncReq(opt);
-  const { statusCode } = res;
+  const { response, data: body } = await asyncReq(opt);
+  const { statusCode } = response;
   if ((statusCode < 200) || (statusCode > 299)) {
     throw new Error(`Wrong status code: ${statusCode}, body: ${body}`);
   }

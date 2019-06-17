@@ -2,7 +2,7 @@ import request, { CoreOptions, Response, UriOptions, UrlOptions } from 'request'
 
 type ReqOpt = (UriOptions & CoreOptions) | (UrlOptions & CoreOptions);
 
-export const asyncReq = (opt: ReqOpt): Promise<{ res: Response, body: any }> => (
+export const asyncReq = <T = any>(opt: ReqOpt): Promise<{ data: T, response: Response }> => (
   new Promise((resolve, reject) => {
     request(opt, (err, res, body) => {
       if (err) {
@@ -13,7 +13,7 @@ export const asyncReq = (opt: ReqOpt): Promise<{ res: Response, body: any }> => 
           const descr = res.statusCode + (body ? ': ' + body : '');
           reject({ code: res.statusCode, name, descr });
         } else {
-          resolve({ res, body });
+          resolve(body);
         }
       }
     });

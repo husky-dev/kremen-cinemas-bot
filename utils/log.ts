@@ -85,7 +85,7 @@ const Log = (m: string) => {
     case LogLevel.Warn:
       return console.log(`${prefix}:`, dataStr);
     case LogLevel.Error:
-      return console.log(`${prefix}:`, dataStr);
+      return console.error(`${prefix}:`, dataStr);
     case LogLevel.Trace:
       return console.log(`${prefix}:`, dataStr);
     default:

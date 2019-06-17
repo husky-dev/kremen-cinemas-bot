@@ -1,7 +1,7 @@
 import { APIGatewayProxyHandler } from 'aws-lambda';
-import Bot from 'bot/index';
+import Bot from 'services/bot';
 import { Log, okResp } from 'utils';
-const log = Log('handler');
+const log = Log('cinemas.handler');
 
 const { env } = process;
 const BOT_TOKEN = env.BOT_TOKEN;

@@ -12,14 +12,10 @@
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "paths": {
-      "bot": ["./bot"],
-      "bot/*": ["./bot/*"],
-      "libs": ["./libs"],
-      "libs/*": ["./libs/*"],
-      "common": ["./common"],
-      "common/*": ["./common/*"],
-      "parsers": ["./parsers"],
-      "parsers/*": ["./parsers/*"],
+      "services": ["./services"],
+      "services/*": ["./services/*"],
+      "lib": ["./lib"],
+      "lib/*": ["./lib/*"],
       "utils": ["./utils"],
       "utils/*": ["./utils/*"]
     }

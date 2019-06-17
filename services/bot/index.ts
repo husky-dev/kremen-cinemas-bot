@@ -1,23 +1,23 @@
 import TelegramBot, {
   ITGMessage, ITGSendMessageReducedOpt, ITGUpdate, strFromBotCmd, TGChatId,
-} from 'libs/tgbot/index';
+} from 'lib/tgbot';
 import { isArray } from 'lodash';
+import { getCache, setCache } from 'services/cache';
 import { Log, secondMs } from 'utils';
 import { adminLogin, adminLogout, isAdmin } from './admin';
-import { getCache, setCache } from './cache';
 import { addToAllGroup, addToGroup, getNotInGroup, removeFromGroup } from './chatsStore';
 import { cinemsDataToMsg, getCinemasData, moviesListFromCinemasData } from './cinemas';
 import { addToNotifiedMovies, filterNotNotifiedMovies } from './moviesStore';
 import {
   cmdParamErr, helpMsg, loginedMsg, logoutErrMsg, logoutMsg,
-  serviceErrMsg, sorryMsg, startMsg, subscribeMsg, unsubscribeMsg, waitMsg,
+  serviceErrMsg, sorryMsg, startMsg, subscribeMsg, unsubscribeMsg,
 } from './msg';
 import { EStatsEvent, logEvent, statsMsgForPeriod } from './stats';
-const ReplyWaitTimeout = secondMs;
+
 const ScheduleCacheKey = 'schedule';
 const ScheduleCacheExp = 60 * 60;
 const UnsubscribeGroup = 'unsubscribe';
-const log = Log('bot');
+const log = Log('cinemas.bot');
 
 const clearMsg = (rawMsg?: string) => {
   if (!rawMsg) { return ''; }
@@ -128,22 +128,14 @@ export default class CinemaBot {
   }
 
   public async onScheduleCmd(chatId: TGChatId) {
-    // Set timeout if operation will take for a wile
-    const waitHandler = setTimeout(() => {
-      this.sendMsg(chatId, waitMsg);
-    }, ReplyWaitTimeout);
     // Try to get schedule
     try {
       const cinemasData = await this.getCachedCinemasData();
       log.trace(cinemasData);
-      // Reset timeout
-      clearTimeout(waitHandler);
       // Reply
       const cinemasMsg = cinemsDataToMsg(cinemasData);
       await this.sendMsg(chatId, cinemasMsg, { parse_mode: 'Markdown', disable_web_page_preview: true });
     } catch (err) {
-      // Reset timeout
-      clearTimeout(waitHandler);
       // Log problems
       log.err(err);
       await this.sendMsg(chatId, serviceErrMsg);
