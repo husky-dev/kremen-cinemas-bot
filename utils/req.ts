@@ -13,7 +13,7 @@ export const asyncReq = <T = any>(opt: ReqOpt): Promise<{ data: T, response: Res
           const descr = res.statusCode + (body ? ': ' + body : '');
           reject({ code: res.statusCode, name, descr });
         } else {
-          resolve(body);
+          resolve({ data: body, response: res });
         }
       }
     });

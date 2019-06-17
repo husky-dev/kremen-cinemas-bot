@@ -1,13 +1,17 @@
 import { compact, reduce, sortBy, uniq } from 'lodash';
 import moment from 'moment';
-import { asyncReq, RN, RN2 } from 'utils';
+import { asyncReq, Log, RN, RN2 } from 'utils';
 import { ICinema, ICinemaSession } from './types';
+const log = Log('cinemas.cinemas');
 
 export const getCinemasData = async (): Promise<ICinema[]> => {
+  log.debug('getting cinemas data');
   const { data } = await asyncReq<ICinema[]>({
     url: 'https://ewom32k72a.execute-api.us-east-1.amazonaws.com/dev/cinemas',
     json: true,
   });
+  log.debug('getting cinemas data done');
+  log.trace('length=', data.length, 'cinemas=', data);
   return data;
 };
 
@@ -87,8 +91,9 @@ const sessionsToFormatStr = (sessions: ICinemaSession[]): string | null => {
 const sessionToStr = (sessions: ICinemaSession[]): string => {
   let str: string = '';
   const sortItems = sortBy(sessions, ({date}) => new Date(date).getTime());
-  for (const session of sortItems) {
-    str = str ? `${str}, \`${dateStrToTime(session.date)}\`` : `\`${dateStrToTime(session.date)}\``;
+  const strItems = uniq(sortItems.map(({ date }) => dateStrToTime(date)));
+  for (const item of strItems) {
+    str = str ? `${str}, \`${item}\`` : `\`${item}\``;
   }
   return `🕒 ${str}`;
 };

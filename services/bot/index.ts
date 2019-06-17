@@ -13,11 +13,11 @@ import {
   serviceErrMsg, sorryMsg, startMsg, subscribeMsg, unsubscribeMsg,
 } from './msg';
 import { EStatsEvent, logEvent, statsMsgForPeriod } from './stats';
+const log = Log('cinemas.bot');
 
 const ScheduleCacheKey = 'schedule';
 const ScheduleCacheExp = 60 * 60;
 const UnsubscribeGroup = 'unsubscribe';
-const log = Log('cinemas.bot');
 
 const clearMsg = (rawMsg?: string) => {
   if (!rawMsg) { return ''; }
@@ -97,13 +97,13 @@ export default class CinemaBot {
   }
 
   public async onStatsCmd(chatId: TGChatId, text: string) {
-  if (!await isAdmin(chatId)) { return this.sendMsg(chatId, sorryMsg); }
-  const period = strFromBotCmd(text) || 'week';
-  if (['day', 'week', 'month', 'year'].indexOf(period) === -1) {
-    return this.sendMsg(chatId, cmdParamErr);
-  }
-  const msg = await statsMsgForPeriod(period);
-  await this.sendMsg(chatId, msg, { parse_mode: 'Markdown' });
+    if (!await isAdmin(chatId)) { return this.sendMsg(chatId, sorryMsg); }
+    const period = strFromBotCmd(text) || 'week';
+    if (['day', 'week', 'month', 'year'].indexOf(period) === -1) {
+      return this.sendMsg(chatId, cmdParamErr);
+    }
+    const msg = await statsMsgForPeriod(period);
+    await this.sendMsg(chatId, msg, { parse_mode: 'Markdown' });
   }
 
   public async onLogoutCmd(chatId: TGChatId) {
